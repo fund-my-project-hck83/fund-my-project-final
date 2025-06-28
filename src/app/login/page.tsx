@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Swal from "sweetalert2";
 import Link from "next/link";
-import AuthButton from "../components/buttonGoogle";
+import AuthButton from "@/components/buttonGoogle";
 import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
