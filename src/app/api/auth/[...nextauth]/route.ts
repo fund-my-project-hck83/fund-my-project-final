@@ -12,7 +12,7 @@ interface ExtendedUser {
    provider?: string;
 }
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
    providers: [
       GoogleProvider({
          clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -61,11 +61,82 @@ export const authOptions: NextAuthOptions = {
       strategy: "jwt",
    },
    callbacks: {
+      async signIn({ user, account, profile }) {
+         // Handle Google OAuth signup/signin
+         if (account?.provider === "google" && user.email) {
+            try {
+               const collection = UserModel.getCollection();
+               
+               // Check if user already exists
+               const existingUser = await collection.findOne({
+                  email: user.email,
+               });
+
+               if (!existingUser) {
+                  // Create new user for Google OAuth
+                  const newUser = {
+                     name: user.name || profile?.name || "Google User",
+                     username: user.email.split('@')[0] || "googleuser",
+                     email: user.email,
+                     password: "", // Google users don't have password
+                     profilePicture: user.image || undefined,
+                     provider: "google",
+                     googleId: profile?.sub || account.providerAccountId,
+                     createdAt: new Date(),
+                     updatedAt: new Date(),
+                  };
+
+                  const result = await collection.insertOne(newUser);
+                  console.log("New Google user created:", result.insertedId);
+               } else {
+                  // Update existing user with Google info if needed
+                  await collection.updateOne(
+                     { email: user.email },
+                     {
+                        $set: {
+                           profilePicture: user.image || existingUser.profilePicture,
+                           updatedAt: new Date(),
+                        },
+                     }
+                  );
+                  console.log("Existing user updated with Google info");
+               }
+
+               return true;
+            } catch (error) {
+               console.error("Error saving Google user:", error);
+               return false;
+            }
+         }
+
+         // Allow credentials provider to continue
+         return true;
+      },
       async jwt({ token, user, account }) {
          if (user) {
-            token.id = user.id;
+            // For Google login, get the saved user from DB
+            if (account?.provider === "google" && user.email) {
+               try {
+                  const collection = UserModel.getCollection();
+                  const dbUser = await collection.findOne({
+                     email: user.email,
+                  });
+                  
+                  if (dbUser) {
+                     token.id = dbUser._id.toString();
+                     token.name = dbUser.name;
+                     token.email = dbUser.email;
+                     token.picture = dbUser.profilePicture;
+                  }
+               } catch (error) {
+                  console.error("Error fetching user from DB:", error);
+               }
+            } else {
+               // For credentials login
+               token.id = user.id;
+            }
          }
-         // Store the provider type for unified logout
+         
          if (account) {
             token.provider = account.provider;
          }
@@ -81,7 +152,7 @@ export const authOptions: NextAuthOptions = {
       },
    },
    pages: {
-      signIn: "/login",
+      signIn: "/",
    },
    secret: process.env.NEXTAUTH_SECRET,
 };

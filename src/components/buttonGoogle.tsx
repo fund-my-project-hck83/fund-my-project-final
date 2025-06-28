@@ -1,11 +1,19 @@
+
 "use client";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Swal from "sweetalert2";
 
 export default function AuthButton() {
+
    const { data: session } = useSession();
    const router = useRouter();
+
+   useEffect(() => {
+      if (session) {
+         router.push("/");
+      }
+   }, [session, router]);
 
    const handleLogin = async () => {
       const result = await signIn("google", {
@@ -17,45 +25,9 @@ export default function AuthButton() {
       }
    };
 
-   const handleLogout = async () => {
-      try {
-         // Unified logout using NextAuth - handles both Google and credentials
-         await signOut({
-            redirect: false,
-            callbackUrl: "/login",
-         });
-
-         // Show success message
-         Swal.fire({
-            icon: "success",
-            title: "Logout Successful",
-            text: "You have been logged out successfully.",
-         });
-
-         // Redirect to login page
-         router.push("/login");
-      } catch (error) {
-         console.error("Logout error:", error);
-         Swal.fire({
-            icon: "error",
-            title: "Logout Error",
-            text: "There was an issue logging out. Please try again.",
-         });
-      }
-   };
-
+   // Jika sudah login, jangan tampilkan tombol login
    if (session) {
-      return (
-         <div>
-            <p>Welcome, {session.user?.name}</p>
-            <button
-               onClick={handleLogout}
-               className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            >
-               Logout
-            </button>
-         </div>
-      );
+      return null;
    }
 
    return (
