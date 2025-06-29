@@ -39,7 +39,7 @@ export default function HeroSection() {
                 Mulai Donasi
               </button>
             </Link>
-            <Link href="/add">
+            <Link href="/create-project">
               <button className="bg-white text-emerald-600 border-2 border-emerald-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-emerald-50 transition-all duration-300 transform hover:scale-105 shadow-lg min-w-[200px]">
                 Galang Dana
               </button>
