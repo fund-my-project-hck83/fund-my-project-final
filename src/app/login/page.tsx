@@ -83,6 +83,17 @@ export default function LoginPage() {
                <p className="text-gray-600 text-sm">Sign in to your account</p>
             </div>
 
+            <div className="space-y-4">
+               <AuthButton />
+               
+               {/* Divider */}
+               <div className="relative flex items-center">
+                  <div className="flex-grow border-t border-gray-300"></div>
+                  <span className="flex-shrink mx-4 text-gray-400 text-sm">or</span>
+                  <div className="flex-grow border-t border-gray-300"></div>
+               </div>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-6">
                <div className="space-y-4">
                   <div>
@@ -107,7 +118,7 @@ export default function LoginPage() {
                      />
                   </div>
                </div>
-               <AuthButton />
+               
                <button
                   type="submit"
                   className="w-full bg-black text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
