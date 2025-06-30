@@ -53,7 +53,7 @@ export default class UserModel {
          createdAt: new Date(),
          updatedAt: new Date(),
       };
-      
+
       await collection.insertOne(newUser);
       return { message: "User registered successfully" };
    }
@@ -67,18 +67,18 @@ export default class UserModel {
       if (!user) {
          throw new CustomError("User not found", 404);
       }
-      
+
       // Check if this is a Google user trying to login with credentials
       if (user.provider === "google") {
          throw new CustomError("Please login with Google", 400);
       }
-      
+
       const isValid = bcrypt.compareSync(password, user.password);
       if (!isValid) {
          throw new CustomError("Invalid email or password", 400);
       }
       const token = jwt.sign(
-         { _id: user._id, email: user.email },
+         { _id: user._id, email: user.email, username: user.username },
          process.env.JWT_SECRET as string,
          { expiresIn: "1d" }
       );
