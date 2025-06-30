@@ -26,6 +26,7 @@ export async function middleware(request: NextRequest) {
          const { payload } = await jose.jwtVerify<{
             _id: string;
             email: string;
+            username: string;
          }>(token.value, secret);
          const requestHeaders = new Headers(request.headers);
          const response = NextResponse.next({
@@ -35,6 +36,7 @@ export async function middleware(request: NextRequest) {
          });
          response.headers.set("x-user-id", payload._id);
          response.headers.set("x-user-email", payload.email);
+         response.headers.set("x-user-username", payload.username);
          return response;
       }
 

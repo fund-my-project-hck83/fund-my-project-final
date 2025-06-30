@@ -6,7 +6,7 @@ import { useState } from "react";
 import Swal from "sweetalert2";
 import Link from "next/link";
 import AuthButton from "@/components/buttonGoogle";
-import { signIn } from "next-auth/react";
+import { setCookie } from "./action";
 
 export default function LoginPage() {
    const [input, setInput] = useState<ILogin>({
@@ -26,13 +26,28 @@ export default function LoginPage() {
       e.preventDefault();
 
       try {
-         const result = await signIn("credentials", {
-            email: input.email,
-            password: input.password,
-            redirect: false,
+         // const result = await signIn("credentials", {
+         //    email: input.email,
+         //    password: input.password,
+         //    redirect: false,
+         // });
+         const resp = await fetch("http://localhost:3000/api/login", {
+            method: "POST",
+            headers: {
+               "content-type": "application/json",
+            },
+            body: JSON.stringify({
+               email: input.email,
+               password: input.password,
+            }),
          });
 
-         if (result?.error) {
+         const result = await resp.json();
+         console.log(result);
+
+         await setCookie("access_token", result.token);
+
+         if (!resp.ok) {
             Swal.fire({
                icon: "error",
                title: "Login Failed",
@@ -40,8 +55,7 @@ export default function LoginPage() {
             });
             return;
          }
-
-         if (result?.ok) {
+         if (resp?.ok) {
             Swal.fire({
                icon: "success",
                title: "Login Successful",

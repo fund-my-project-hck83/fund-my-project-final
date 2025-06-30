@@ -1,35 +1,7 @@
-
 "use client";
-import { useEffect } from "react";
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export default function AuthButton() {
-
-   const { data: session } = useSession();
-   const router = useRouter();
-
-   useEffect(() => {
-      if (session) {
-         router.push("/");
-      }
-   }, [session, router]);
-
-   const handleLogin = async () => {
-      const result = await signIn("google", {
-         redirect: false,
-         callbackUrl: "/",
-      });
-      if (result?.ok && !result.error) {
-         router.push("/");
-      }
-   };
-
-   // Jika sudah login, jangan tampilkan tombol login
-   if (session) {
-      return null;
-   }
-
+   const handleLogin = async () => {};
    return (
       <div className="space-y-4">
          <button

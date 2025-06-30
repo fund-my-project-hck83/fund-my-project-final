@@ -7,8 +7,6 @@ export async function POST(request: Request) {
       const message = await UserModel.register(body);
       return Response.json({ message }, { status: 201 });
    } catch (error) {
-      console.log(error, "<<<< error in register route");
-
       const { message, status } = errorHandler(error);
       return Response.json({ message }, { status });
    }
