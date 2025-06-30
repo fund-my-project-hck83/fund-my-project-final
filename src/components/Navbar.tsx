@@ -1,20 +1,98 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { deleteCookie } from "@/app/login/action";
 
 export default function Navbar() {
    const [isMenuOpen, setIsMenuOpen] = useState(false);
-   const { data: session } = useSession();
+   const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+   const [isLoggedIn, setIsLoggedIn] = useState(false);
+   const [isLoading, setIsLoading] = useState(true);
+   const router = useRouter();
+
+   useEffect(() => {
+      // Check if user is logged in by checking for access_token cookie
+      const checkAuth = async () => {
+         try {
+            // Check if access_token cookie exists
+            const cookies = document.cookie.split(';');
+            const accessTokenCookie = cookies.find(cookie => 
+               cookie.trim().startsWith('access_token=')
+            );
+
+            if (accessTokenCookie) {
+               setIsLoggedIn(true);
+               
+               // Try to get user data from the token
+               try {
+                  const response = await fetch('/api/verify-token', {
+                     credentials: 'include'
+                  });
+                  
+                  if (response.ok) {
+                     const userData = await response.json();
+                     setUser(userData);
+                  } else {
+                     // Token exists but is invalid, user is still logged in but no user data
+                     setUser({ name: "User" });
+                  }
+               } catch (error) {
+                  // If verify fails, still show as logged in but with default user
+                  setUser({ name: "User" });
+               }
+            } else {
+               setIsLoggedIn(false);
+               setUser(null);
+            }
+         } catch (error) {
+            console.error('Auth check failed:', error);
+            setIsLoggedIn(false);
+            setUser(null);
+         } finally {
+            setIsLoading(false);
+         }
+      };
+
+      checkAuth();
+   }, []);
 
    const toggleMenu = () => {
       setIsMenuOpen(!isMenuOpen);
    };
 
    const handleSignOut = async () => {
-      await signOut({ callbackUrl: "/" });
+      try {
+         await deleteCookie("access_token");
+         setIsLoggedIn(false);
+         setUser(null);
+         router.push("/");
+      } catch (error) {
+         console.error('Logout failed:', error);
+      }
    };
+
+   if (isLoading) {
+      return (
+         <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+               <div className="flex justify-between items-center h-16">
+                  <div className="flex-shrink-0">
+                     <Link href="/" className="flex items-center">
+                        <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+                           FundMyProject
+                        </h1>
+                     </Link>
+                  </div>
+                  <div className="hidden md:flex items-center space-x-4">
+                     <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+                  </div>
+               </div>
+            </div>
+         </nav>
+      );
+   }
 
    return (
       <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
@@ -55,7 +133,7 @@ export default function Navbar() {
 
                {/* Desktop Auth Buttons */}
                <div className="hidden md:flex items-center space-x-4">
-                  {!session ? (
+                  {!isLoggedIn ? (
                      <>
                         <Link
                            href="/login"
@@ -72,18 +150,20 @@ export default function Navbar() {
                      </>
                   ) : (
                      <>
-                        <button className="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                        <Link
+                           href="/create-project"
+                           className="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                        >
                            Buat Proyek
-                        </button>
+                        </Link>
                         <div className="relative group">
                            <button className="flex items-center space-x-2 text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                               <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
                                  <span className="text-emerald-600 font-semibold">
-                                    {session.user?.name?.[0]?.toUpperCase() ||
-                                       "U"}
+                                    {user?.name?.[0]?.toUpperCase() || "U"}
                                  </span>
                               </div>
-                              <span>{session.user?.name || "User"}</span>
+                              <span>{user?.name || "User"}</span>
                               <svg
                                  className="w-4 h-4"
                                  fill="none"
@@ -190,7 +270,7 @@ export default function Navbar() {
                      </Link>
 
                      <div className="border-t border-gray-200 pt-4">
-                        {!session ? (
+                        {!isLoggedIn ? (
                            <div className="space-y-2">
                               <Link
                                  href="/login"
@@ -212,20 +292,20 @@ export default function Navbar() {
                               <div className="flex items-center space-x-3 px-3 py-2">
                                  <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
                                     <span className="text-emerald-600 font-semibold">
-                                       {session.user?.name?.[0]?.toUpperCase() ||
-                                          "U"}
+                                       {user?.name?.[0]?.toUpperCase() || "U"}
                                     </span>
                                  </div>
                                  <span className="text-gray-700 font-medium">
-                                    {session.user?.name || "User"}
+                                    {user?.name || "User"}
                                  </span>
                               </div>
-                              <button
+                              <Link
+                                 href="/create-project"
                                  onClick={() => setIsMenuOpen(false)}
                                  className="w-full bg-emerald-600 text-white hover:bg-emerald-700 block px-3 py-2 rounded-md text-base font-medium transition-colors"
                               >
                                  Buat Proyek
-                              </button>
+                              </Link>
                               <a
                                  href="#"
                                  className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"

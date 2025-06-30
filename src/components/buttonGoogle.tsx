@@ -1,10 +1,153 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
+import { setCookie } from "@/app/login/action";
+
 export default function AuthButton() {
-   const handleLogin = async () => {};
+   const router = useRouter();
+
+   const handleLogin = async () => {
+      try {
+         // Create Google OAuth URL
+         const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+            `client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&` +
+            `redirect_uri=${encodeURIComponent('http://localhost:3000/api/googleLogin')}&` +
+            `response_type=code&` +
+            `scope=email profile&` +
+            `access_type=offline&` +
+            `prompt=select_account`;
+
+         console.log('Opening Google OAuth popup...');
+
+         // Open Google OAuth in a popup
+         const popup = window.open(googleAuthUrl, 'google-auth', 'width=500,height=600,scrollbars=yes,resizable=yes');
+         
+         if (!popup) {
+            Swal.fire({
+               icon: "error",
+               title: "Popup Blocked",
+               text: "Please allow popups for this site and try again.",
+            });
+            return;
+         }
+
+         let loginProcessed = false;
+
+         // Listen for messages from the popup
+         const messageListener = async (event: MessageEvent) => {
+            console.log('Received message:', event.data);
+            
+            if (event.origin !== 'http://localhost:3000') return;
+            
+            if (loginProcessed) return; // Prevent double processing
+            
+            switch (event.data.type) {
+               case 'GOOGLE_LOGIN_SUCCESS':
+                  if (event.data.token) {
+                     loginProcessed = true;
+                     window.removeEventListener('message', messageListener);
+                     
+                     try {
+                        await setCookie("access_token", event.data.token);
+                        Swal.fire({
+                           icon: "success",
+                           title: "Login Successful",
+                           text: "Welcome!",
+                        });
+                        router.push("/");
+                     } catch (error) {
+                        console.error('Failed to set cookie:', error);
+                        Swal.fire({
+                           icon: "error",
+                           title: "Login Failed",
+                           text: "Failed to save login information.",
+                        });
+                     }
+                  }
+                  break;
+                  
+               case 'GOOGLE_LOGIN_ERROR':
+                  loginProcessed = true;
+                  window.removeEventListener('message', messageListener);
+                  Swal.fire({
+                     icon: "error",
+                     title: "Login Failed",
+                     text: event.data.error || "Google login failed. Please try again.",
+                  });
+                  break;
+                  
+               case 'GOOGLE_LOGIN_CANCELLED':
+                  loginProcessed = true;
+                  window.removeEventListener('message', messageListener);
+                  console.log('User cancelled Google login');
+                  // Don't show error for user cancellation
+                  break;
+            }
+         };
+
+         window.addEventListener('message', messageListener);
+
+         // Check for popup closure as fallback
+         const checkClosed = setInterval(() => {
+            if (popup?.closed) {
+               clearInterval(checkClosed);
+               window.removeEventListener('message', messageListener);
+               
+               if (!loginProcessed) {
+                  // Check localStorage as fallback
+                  const tempToken = localStorage.getItem('temp_google_token');
+                  if (tempToken) {
+                     loginProcessed = true;
+                     localStorage.removeItem('temp_google_token');
+                     setCookie("access_token", tempToken).then(() => {
+                        Swal.fire({
+                           icon: "success",
+                           title: "Login Successful", 
+                           text: "Welcome!",
+                        });
+                        router.push("/");
+                     }).catch(() => {
+                        Swal.fire({
+                           icon: "error",
+                           title: "Login Failed",
+                           text: "Failed to save login information.",
+                        });
+                     });
+                  } else {
+                     console.log('Popup closed without successful login');
+                     // Don't show error - user might have cancelled
+                  }
+               }
+            }
+         }, 1000);
+
+         // Timeout after 5 minutes
+         setTimeout(() => {
+            if (!loginProcessed) {
+               clearInterval(checkClosed);
+               window.removeEventListener('message', messageListener);
+               if (popup && !popup.closed) {
+                  popup.close();
+               }
+               console.log('Google login timeout');
+            }
+         }, 300000); // 5 minutes
+
+      } catch (error) {
+         console.error("Google login error:", error);
+         Swal.fire({
+            icon: "error",
+            title: "Login Failed",
+            text: "Google login failed. Please try again.",
+         });
+      }
+   };
+      
    return (
       <div className="space-y-4">
          <button
+            type="button"
             onClick={handleLogin}
             className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-6 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
          >
