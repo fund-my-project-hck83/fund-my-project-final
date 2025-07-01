@@ -12,10 +12,8 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith("/api/auth") ||
       pathname.startsWith("/api/login") ||
       pathname.startsWith("/api/register") ||
-      pathname.startsWith("/api/googleLogin") ||
-      pathname.startsWith("/api/projects")
+      pathname.startsWith("/api/googleLogin")
     ) {
-      // console.log("Skipping middleware for public API route:", pathname);
       return NextResponse.next();
     }
 

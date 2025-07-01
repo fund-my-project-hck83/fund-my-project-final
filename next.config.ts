@@ -47,7 +47,8 @@ const nextConfig: NextConfig = {
       'via.placeholder.com',
       'picsum.photos',
       'example.com',
-      'images.gofundme.com'
+      'images.gofundme.com',
+      'ui-avatars.com',
     ],
   },
 };
