@@ -16,8 +16,8 @@ export default function Home() {
 
    const fetchAllData = async () => {
       try {
-         // Fetch hanya data projects
-         const projectsRes = await fetch("/api/projects?limit=8");
+         // Fetch trending projects berdasarkan dana terbanyak
+         const projectsRes = await fetch("/api/projects/trending?limit=8&method=amount");
          const projectsData = await projectsRes.json();
 
          setProjects(projectsData);
@@ -43,7 +43,7 @@ export default function Home() {
                   <div className="max-w-7xl mx-auto text-center">
                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
                      <p className="mt-4 text-gray-600">
-                        Memuat proyek trending...
+                        Loading trending projects...
                      </p>
                   </div>
                </section>

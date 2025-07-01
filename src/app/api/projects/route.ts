@@ -7,9 +7,21 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const search = searchParams.get('search');
-        const page = parseInt(searchParams.get('page') || '2');
+        const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '10');
+        const includeCompleted = searchParams.get('includeCompleted') === 'true';
+        const sortBy = searchParams.get('sortBy') as 'endDate' | 'funding' | 'created' | 'name' || 'endDate';
         
+        // Use the new method if includeCompleted is true
+        if (includeCompleted) {
+            const projects = await ProjectModel.findAllWithSorting(search, page, limit, sortBy);
+            return new Response(JSON.stringify(projects), {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            });
+        }
+        
+        // Default behavior: only active projects
         const projects = await ProjectModel.findWithPagination(search, page, limit);
         return new Response(JSON.stringify(projects), {
             status: 200,

@@ -22,14 +22,14 @@ export default function HeroSection() {
 
           {/* Main heading */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Buat Perbedaan dengan
+            Buat Kontribusi
             <span className="block bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Donasi Anda
+              Mulai dari Sini
             </span>
           </h1>
           
           <p className="text-xl sm:text-2xl text-gray-600 mb-10 max-w-4xl mx-auto leading-relaxed">
-            Bergabunglah dengan jutaan orang yang telah membantu mengumpulkan dana untuk hal-hal yang mereka pedulikan.
+            Di Fund My Project, kami memberikan support pada inovator untuk mewujudkan inspirasi yang memberikan dampak. 
           </p>
 
           {/* CTA Buttons */}
