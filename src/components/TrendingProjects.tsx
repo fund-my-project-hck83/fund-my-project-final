@@ -28,10 +28,13 @@ export default function TrendingProjects({ projects }: TrendingProjectsProps) {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            Proyek Trending
+            🔥 Trending Projects
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Bergabunglah dengan ribuan donatur yang mendukung proyek-proyek inspiratif ini
+            Projects that are closest to their funding goals and have the highest collected amounts
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Diurutkan berdasarkan persentase pencapaian target dan jumlah dana yang sudah terkumpul
           </p>
         </div>
 
@@ -143,7 +146,7 @@ export default function TrendingProjects({ projects }: TrendingProjectsProps) {
             <div className="text-center mt-16">
               <Link href="/projects">
                 <button className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-12 py-4 rounded-full font-semibold text-lg hover:from-emerald-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-xl">
-                  Lihat Semua Proyek
+                  View All Projects
                   <span className="ml-2">→</span>
                 </button>
               </Link>
@@ -155,14 +158,14 @@ export default function TrendingProjects({ projects }: TrendingProjectsProps) {
               <span className="text-4xl">💡</span>
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              Belum ada proyek trending
+              No trending projects yet
             </h3>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
-              Jadilah yang pertama untuk memulai proyek inspiratif Anda dan dapatkan dukungan dari komunitas
+              Be the first to start your inspiring project and get support from the community
             </p>
             <Link href="/submit-project">
               <button className="bg-emerald-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-emerald-700 transition-colors">
-                Mulai Proyek Anda
+                Start Your Project
               </button>
             </Link>
           </div>

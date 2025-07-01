@@ -40,6 +40,8 @@ export default function Navbar() {
                   }
                } catch (error) {
                   // If verify fails, still show as logged in but with default user
+                  console.log(error);
+                  
                   setUser({ name: "User" });
                }
             } else {
@@ -114,7 +116,7 @@ export default function Navbar() {
                         href="/projects"
                         className="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                      >
-                        Jelajahi Proyek
+                        Explore Projects
                      </Link>
                      <Link
                         href="/projects/trending"
@@ -123,11 +125,35 @@ export default function Navbar() {
                         Trending
                      </Link>
                      <Link
-                        href="/projects/ending-soon"
+                        href="/projects/urgent"
                         className="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                      >
-                        Ending Soon
+                        Urgent
                      </Link>
+                  </div>
+               </div>
+
+               {/* Search Box */}
+               <div className="hidden md:flex flex-1 max-w-lg mx-8">
+                  <div className="relative w-full">
+                     <input
+                        type="text"
+                        placeholder="Search projects..."
+                        className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        onKeyPress={(e) => {
+                           if (e.key === 'Enter') {
+                              const query = (e.target as HTMLInputElement).value.trim();
+                              if (query) {
+                                 window.location.href = `/projects?search=${encodeURIComponent(query)}`;
+                              }
+                           }
+                        }}
+                     />
+                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                     </div>
                   </div>
                </div>
 
@@ -139,13 +165,13 @@ export default function Navbar() {
                            href="/login"
                            className="text-gray-700 hover:text-emerald-600 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                         >
-                           Masuk
+                           Sign In
                         </Link>
                         <Link
                            href="/register"
                            className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                         >
-                           Daftar
+                           Sign Up
                         </Link>
                      </>
                   ) : (
@@ -154,7 +180,7 @@ export default function Navbar() {
                            href="/create-project"
                            className="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                         >
-                           Buat Proyek
+                           Create Project
                         </Link>
                         <div className="relative group">
                            <button className="flex items-center space-x-2 text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
@@ -179,30 +205,11 @@ export default function Navbar() {
                               </svg>
                            </button>
                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                              <a
-                                 href="#"
-                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                 Profil Saya
-                              </a>
-                              <a
-                                 href="#"
-                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                 Proyek Saya
-                              </a>
-                              <a
-                                 href="#"
-                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                 Pengaturan
-                              </a>
-                              <div className="border-t border-gray-100"></div>
                               <button
                                  onClick={handleSignOut}
                                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                               >
-                                 Keluar
+                                 Sign Out
                               </button>
                            </div>
                         </div>
@@ -252,7 +259,7 @@ export default function Navbar() {
                         className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
                         onClick={() => setIsMenuOpen(false)}
                      >
-                        Jelajahi Proyek
+                        Explore Projects
                      </Link>
                      <Link
                         href="/projects/trending"
@@ -262,12 +269,37 @@ export default function Navbar() {
                         Trending
                      </Link>
                      <Link
-                        href="/projects/ending-soon"
+                        href="/projects/urgent"
                         className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
                         onClick={() => setIsMenuOpen(false)}
                      >
-                        Ending Soon
+                        Urgent
                      </Link>
+
+                     {/* Mobile Search */}
+                     <div className="px-3 py-2">
+                        <div className="relative">
+                           <input
+                              type="text"
+                              placeholder="Search projects..."
+                              className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                              onKeyPress={(e) => {
+                                 if (e.key === 'Enter') {
+                                    const query = (e.target as HTMLInputElement).value.trim();
+                                    if (query) {
+                                       window.location.href = `/projects?search=${encodeURIComponent(query)}`;
+                                       setIsMenuOpen(false);
+                                    }
+                                 }
+                              }}
+                           />
+                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                              </svg>
+                           </div>
+                        </div>
+                     </div>
 
                      <div className="border-t border-gray-200 pt-4">
                         {!isLoggedIn ? (
@@ -277,14 +309,14 @@ export default function Navbar() {
                                  className="w-full text-left text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
                                  onClick={() => setIsMenuOpen(false)}
                               >
-                                 Masuk
+                                 Sign In
                               </Link>
                               <Link
                                  href="/register"
                                  className="w-full text-left text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
                                  onClick={() => setIsMenuOpen(false)}
                               >
-                                 Daftar
+                                 Sign Up
                               </Link>
                            </div>
                         ) : (
@@ -304,26 +336,8 @@ export default function Navbar() {
                                  onClick={() => setIsMenuOpen(false)}
                                  className="w-full bg-emerald-600 text-white hover:bg-emerald-700 block px-3 py-2 rounded-md text-base font-medium transition-colors"
                               >
-                                 Buat Proyek
+                                 Create Project
                               </Link>
-                              <a
-                                 href="#"
-                                 className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
-                              >
-                                 Profil Saya
-                              </a>
-                              <a
-                                 href="#"
-                                 className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
-                              >
-                                 Proyek Saya
-                              </a>
-                              <a
-                                 href="#"
-                                 className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
-                              >
-                                 Pengaturan
-                              </a>
                               <button
                                  onClick={() => {
                                     handleSignOut();
@@ -331,7 +345,7 @@ export default function Navbar() {
                                  }}
                                  className="w-full text-left text-red-600 hover:text-red-700 block px-3 py-2 rounded-md text-base font-medium"
                               >
-                                 Keluar
+                                 Sign Out
                               </button>
                            </div>
                         )}

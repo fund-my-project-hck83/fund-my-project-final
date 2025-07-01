@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
+import InfiniteScroll from 'react-infinite-scroll-component';
 import { Project } from '@/server/models/ProjectModel';
 import Navbar from '@/components/Navbar';
 
@@ -8,12 +10,12 @@ export default function AllProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'trending' | 'ending-soon'>('all');
+  const searchParams = useSearchParams();
+  const searchTerm = searchParams.get('search') || '';
 
-  const fetchProjects = useCallback(async (pageNum: number = 1, search: string = '', reset: boolean = false, filter: 'all' | 'trending' | 'ending-soon' = 'all') => {
+  const fetchProjects = useCallback(async (pageNum: number = 1, search: string = '', reset: boolean = false) => {
     try {
       if (pageNum === 1) {
         setLoading(true);
@@ -21,17 +23,9 @@ export default function AllProjectsPage() {
         setLoadingMore(true);
       }
 
-      let url = '';
-      
-      if (filter === 'trending') {
-        url = `/api/projects/trending?limit=12`;
-      } else if (filter === 'ending-soon') {
-        url = `/api/projects/ending-soon?limit=12`;
-      } else {
-        url = search 
-          ? `/api/projects?search=${encodeURIComponent(search)}&page=${pageNum}&limit=12`
-          : `/api/projects?page=${pageNum}&limit=12`;
-      }
+      const url = search 
+        ? `/api/projects?search=${encodeURIComponent(search)}&page=${pageNum}&limit=12`
+        : `/api/projects?page=${pageNum}&limit=12`;
       
       const response = await fetch(url);
       const data = await response.json();
@@ -53,36 +47,18 @@ export default function AllProjectsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchProjects(1, searchTerm, true, activeFilter);
-    setPage(1);
-  }, [fetchProjects, searchTerm, activeFilter]);
-
-  // Infinite scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop
-        >= document.documentElement.offsetHeight - 1000 &&
-        !loadingMore &&
-        hasMore &&
-        !loading &&
-        activeFilter === 'all' // Only enable infinite scroll for 'all' filter
-      ) {
-        const nextPage = page + 1;
-        setPage(nextPage);
-        fetchProjects(nextPage, searchTerm, false, activeFilter);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loadingMore, hasMore, page, searchTerm, fetchProjects, loading, activeFilter]);
-
-  const handleSearch = () => {
-    setPage(1);
-    fetchProjects(1, searchTerm, true, activeFilter);
+  const fetchMoreProjects = () => {
+    if (!loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchProjects(nextPage, searchTerm, false);
+    }
   };
+
+  useEffect(() => {
+    fetchProjects(1, searchTerm, true);
+    setPage(1);
+  }, [fetchProjects, searchTerm]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -97,6 +73,14 @@ export default function AllProjectsPage() {
     return Math.round((current / goal) * 100);
   };
 
+  const calculateDaysRemaining = (endDate: string | Date) => {
+    const now = new Date();
+    const end = new Date(endDate);
+    const diffTime = end.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   const isActiveFundraising = (project: Project) => {
     const now = new Date();
     const startDate = new Date(project.fundraisingStartDate);
@@ -104,95 +88,47 @@ export default function AllProjectsPage() {
     return now >= startDate && now <= endDate && !project.isFundingComplete;
   };
 
+  const getProjectStatus = (project: Project) => {
+    const now = new Date();
+    const startDate = new Date(project.fundraisingStartDate);
+    const endDate = new Date(project.fundraisingEndDate);
+
+    // Jika funding sudah complete
+    if (project.isFundingComplete) {
+      return { status: 'selesai', text: 'Completed', color: 'bg-blue-500' };
+    }
+
+    // Jika fundraising belum dimulai
+    if (now < startDate) {
+      return { status: 'soon', text: 'Coming Soon', color: 'bg-yellow-500' };
+    }
+
+    // Jika fundraising sedang berlangsung
+    if (now >= startDate && now <= endDate) {
+      return { status: 'aktif', text: 'Active', color: 'bg-green-500' };
+    }
+
+    // Jika fundraising sudah berakhir tapi belum complete
+    return { status: 'berakhir', text: 'Ended', color: 'bg-gray-500' };
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Navbar */}
       <Navbar />
 
-      {/* Filter Navigation */}
-      <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8 overflow-x-auto">
-            <button
-              onClick={() => {
-                setActiveFilter('all');
-                setSearchTerm('');
-              }}
-              className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                activeFilter === 'all'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Semua Proyek
-            </button>
-            <button
-              onClick={() => {
-                setActiveFilter('trending');
-                setSearchTerm('');
-              }}
-              className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                activeFilter === 'trending'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              🔥 Trending
-            </button>
-            <button
-              onClick={() => {
-                setActiveFilter('ending-soon');
-                setSearchTerm('');
-              }}
-              className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                activeFilter === 'ending-soon'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              ⏰ Ending Soon
-            </button>
-          </div>
-        </div>
-      </nav>
 
       {/* Page Header */}
       <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white border-b">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              {activeFilter === 'trending' && '🔥 Proyek Trending'}
-              {activeFilter === 'ending-soon' && '⏰ Proyek Ending Soon'}
-              {activeFilter === 'all' && 'Semua Proyek'}
+              Lets begin your fundraising journey
             </h1>
             <p className="text-lg text-gray-600">
-              {activeFilter === 'trending' && 'Proyek-proyek paling populer dan banyak didukung'}
-              {activeFilter === 'ending-soon' && 'Proyek-proyek yang akan segera berakhir'}
-              {activeFilter === 'all' && 'Temukan dan dukung proyek-proyek inspiratif yang membutuhkan bantuan Anda'}
+              Find and support inspiring projects that need your help
             </p>
           </div>
-
-          {/* Search Bar */}
-          {activeFilter === 'all' && (
-            <div className="max-w-2xl mx-auto">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <input
-                  type="text"
-                  placeholder="Cari proyek berdasarkan nama, deskripsi, atau lokasi..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                <button
-                  onClick={handleSearch}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                >
-                  Cari Proyek
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
@@ -203,20 +139,13 @@ export default function AllProjectsPage() {
           {!loading && (
             <div className="mb-8 text-center">
               <p className="text-gray-600">
-                {activeFilter === 'trending' && (
-                  <>Menampilkan proyek-proyek trending terpopuler</>
-                )}
-                {activeFilter === 'ending-soon' && (
-                  <>Menampilkan proyek-proyek yang akan segera berakhir</>
-                )}
-                {activeFilter === 'all' && searchTerm && (
-                  <>Menampilkan hasil pencarian untuk &quot;<span className="font-semibold">{searchTerm}</span>&quot;</>
-                )}
-                {activeFilter === 'all' && !searchTerm && (
-                  <>Menampilkan semua proyek tersedia</>
+                {searchTerm ? (
+                  <>Showing search results for &quot;<span className="font-semibold">{searchTerm}</span>&quot;</>
+                ) : (
+                  <>Showing all available projects</>
                 )}
                 {projects.length > 0 && (
-                  <span className="ml-2">({projects.length} proyek{hasMore && activeFilter === 'all' ? '+' : ''})</span>
+                  <span className="ml-2">({projects.length} projects{hasMore ? '+' : ''})</span>
                 )}
               </p>
             </div>
@@ -228,115 +157,114 @@ export default function AllProjectsPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {projects.map((project) => (
-                  <div key={project._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer">
-                    <div className="relative h-48 bg-gradient-to-r from-blue-400 to-green-400">
-                      {project.projectImage && (
-                        <img
-                          src={project.projectImage}
-                          alt={project.name}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                      <div className="absolute top-3 right-3">
-                        {isActiveFundraising(project) ? (
-                          <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                            Aktif
-                          </span>
-                        ) : project.isFundingComplete ? (
-                          <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                            Selesai
-                          </span>
-                        ) : (
-                          <span className="bg-gray-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                            Berakhir
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="p-5">
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
-                        {project.name}
-                      </h3>
-                      <p className="text-gray-600 mb-4 line-clamp-3 text-sm">
-                        {project.description}
-                      </p>
-                      
-                      <div className="mb-4">
-                        <div className="flex justify-between text-sm text-gray-600 mb-2">
-                          <span>Terkumpul</span>
-                          <span className="font-semibold">{calculateFundingPercentage(project.currentFunding, project.fundingGoal)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{
-                              width: `${Math.min(100, calculateFundingPercentage(project.currentFunding, project.fundingGoal))}%`
-                            }}
-                          ></div>
-                        </div>
-                        <div className="text-xs text-gray-600 mt-2">
-                          {formatCurrency(project.currentFunding)} dari {formatCurrency(project.fundingGoal)}
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <div className="text-sm text-gray-500">
-                          📍 {project.location}
-                        </div>
-                        <button 
-                          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                            isActiveFundraising(project)
-                              ? 'bg-blue-600 text-white hover:bg-blue-700'
-                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          }`}
-                          disabled={!isActiveFundraising(project)}
-                        >
-                          {isActiveFundraising(project) ? 'Donasi Sekarang' : 'Tidak Aktif'}
-                        </button>
-                      </div>
-                    </div>
+              <InfiniteScroll
+                dataLength={projects.length}
+                next={fetchMoreProjects}
+                hasMore={hasMore}
+                loader={
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-3 text-gray-600">Loading more projects...</span>
                   </div>
-                ))}
-              </div>
+                }
+                endMessage={
+                  <div className="text-center py-8">
+                    <div className="text-gray-400 text-4xl mb-2">🎉</div>
+                    <p className="text-gray-500">You have seen all available projects</p>
+                  </div>
+                }
+                refreshFunction={() => fetchProjects(1, searchTerm, true)}
+                pullDownToRefresh={false}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {projects.map((project) => (
+                    <div key={project._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer">
+                      <div className="relative h-48 bg-gradient-to-r from-blue-400 to-green-400">
+                        {project.projectImage && (
+                          <img
+                            src={project.projectImage}
+                            alt={project.name}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                        <div className="absolute top-3 right-3">
+                          {(() => {
+                            const status = getProjectStatus(project);
+                            return (
+                              <span className={`${status.color} text-white px-3 py-1 rounded-full text-sm font-semibold`}>
+                                {status.text}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                      
+                      <div className="p-5">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                          {project.name}
+                        </h3>
+                        <p className="text-gray-600 mb-4 line-clamp-3 text-sm">
+                          {project.description}
+                        </p>
+                        
+                        <div className="mb-4">
+                          <div className="flex justify-between text-sm text-gray-600 mb-2">
+                            <span>                          Collected</span>
+                            <span className="font-semibold">{calculateFundingPercentage(project.currentFunding, project.fundingGoal)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${Math.min(100, calculateFundingPercentage(project.currentFunding, project.fundingGoal))}%`
+                              }}
+                            ></div>
+                          </div>
+                          <div className="text-xs text-gray-600 mt-2">
+                            {formatCurrency(project.currentFunding)} dari {formatCurrency(project.fundingGoal)}
+                          </div>
+                        </div>
 
-              {/* Loading more indicator */}
-              {loadingMore && activeFilter === 'all' && (
-                <div className="flex justify-center items-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-3 text-gray-600">Memuat proyek lainnya...</span>
+                        <div className="flex justify-between items-center">
+                          <div className="text-sm text-gray-500">
+                            📍 {project.location}
+                          </div>
+                          <button 
+                            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                              isActiveFundraising(project)
+                                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
+                            disabled={!isActiveFundraising(project)}
+                          >
+                            {(() => {
+                              const status = getProjectStatus(project);
+                              if (status.status === 'aktif') return 'Donate Now';
+                              if (status.status === 'soon') return 'Coming Soon';
+                              if (status.status === 'selesai') return 'Target Achieved';
+                              return 'Already Ended';
+                            })()}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-
-              {/* No more results */}
-              {!hasMore && projects.length > 0 && activeFilter === 'all' && (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 text-4xl mb-2">🎉</div>
-                  <p className="text-gray-500">Anda telah melihat semua proyek yang tersedia</p>
-                </div>
-              )}
+              </InfiniteScroll>
 
               {/* No results */}
               {projects.length === 0 && !loading && (
                 <div className="text-center py-20">
                   <div className="text-gray-400 text-6xl mb-4">🔍</div>
                   <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                    {activeFilter === 'trending' && 'Belum ada proyek trending'}
-                    {activeFilter === 'ending-soon' && 'Tidak ada proyek yang akan berakhir'}
-                    {activeFilter === 'all' && searchTerm && 'Tidak ada proyek ditemukan'}
-                    {activeFilter === 'all' && !searchTerm && 'Belum ada proyek tersedia'}
+                    {searchTerm ? 'No projects found' : 'No projects available yet'}
                   </h3>
                   <p className="text-gray-500 mb-6">
-                    {activeFilter === 'trending' && 'Belum ada proyek yang sedang trending saat ini'}
-                    {activeFilter === 'ending-soon' && 'Tidak ada proyek yang akan berakhir dalam waktu dekat'}
-                    {activeFilter === 'all' && searchTerm && 'Coba kata kunci lain untuk pencarian Anda'}
-                    {activeFilter === 'all' && !searchTerm && 'Jadilah yang pertama untuk memulai proyek impian Anda!'}
+                    {searchTerm ? 'Try other keywords for your search' : 'Be the first to start your dream project!'}
                   </p>
-                  {activeFilter === 'all' && !searchTerm && (
+                  {!searchTerm && (
                     <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
-                      Mulai Proyek Anda
+                      Start Your Project
                     </button>
                   )}
                 </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Project } from '@/server/models/ProjectModel';
+import Navbar from '@/components/Navbar';
 
 export default function EndingSoonPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -62,6 +63,7 @@ export default function EndingSoonPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -270,13 +272,10 @@ export default function EndingSoonPage() {
                             </div>
                           </div>
 
-                          {/* Action Buttons */}
-                          <div className="flex space-x-3 mt-4">
-                            <button className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                          {/* Action Button */}
+                          <div className="mt-4">
+                            <button className="w-full bg-red-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-700 transition-colors">
                               🚀 Donasi Sekarang
-                            </button>
-                            <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
-                              Lihat Detail
                             </button>
                           </div>
                         </div>
