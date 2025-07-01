@@ -1,19 +1,34 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
-import { IProjectResponse } from '@/interfaces/interfaces';
-import Link from 'next/link';
-import MidtransScript from '@/components/MidtransScript';
-import DonateModal from '@/components/DonateModal';
-import FundingProgress from '@/components/FundingProgress';
-import ProjectHeader from '@/components/ProjectHeader';
-import RecentDonations from '@/components/RecentDonations';
-import ProjectSidebar from '@/components/ProjectSidebar';
-import SuccessModal from '@/components/SuccessModal';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import ErrorMessage from '@/components/ErrorMessage';
-import { Menu, X, Heart, TrendingUp, Target, AlertTriangle, Zap, ChevronDown, ChevronUp, BarChart3, FileText, ExternalLink, Eye } from 'lucide-react';
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { IProjectResponse } from "@/interfaces/interfaces";
+import Link from "next/link";
+import MidtransScript from "@/components/MidtransScript";
+import DonateModal from "@/components/DonateModal";
+import FundingProgress from "@/components/FundingProgress";
+import ProjectHeader from "@/components/ProjectHeader";
+import RecentDonations from "@/components/RecentDonations";
+import ProjectSidebar from "@/components/ProjectSidebar";
+import SuccessModal from "@/components/SuccessModal";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import ErrorMessage from "@/components/ErrorMessage";
+import {
+  Menu,
+  X,
+  Heart,
+  TrendingUp,
+  Target,
+  AlertTriangle,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  BarChart3,
+  FileText,
+  ExternalLink,
+  Eye,
+} from "lucide-react";
+import ProjectChat from "@/components/ProjectChat";
 
 interface MidtransResult {
   transaction_id: string;
@@ -22,12 +37,15 @@ interface MidtransResult {
 }
 
 interface MidtransSnap {
-  pay: (token: string, callbacks: {
-    onSuccess: (result: MidtransResult) => void;
-    onPending: () => void;
-    onError: () => void;
-    onClose: () => void;
-  }) => void;
+  pay: (
+    token: string,
+    callbacks: {
+      onSuccess: (result: MidtransResult) => void;
+      onPending: () => void;
+      onError: () => void;
+      onClose: () => void;
+    }
+  ) => void;
 }
 
 declare global {
@@ -54,19 +72,21 @@ export default function ProjectDetailPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [donationAmount, setDonationAmount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isOwner, setIsOwner] = useState(false);
-  const [expandedInsights, setExpandedInsights] = useState<Record<string, boolean>>({});
+  const [isOwner] = useState(false);
+  const [expandedInsights, setExpandedInsights] = useState<
+    Record<string, boolean>
+  >({});
 
   const fetchProject = useCallback(async () => {
     try {
       const response = await fetch(`/api/projects/${params.slug}`);
       if (!response.ok) {
-        throw new Error('Project not found');
+        throw new Error("Project not found");
       }
       const data = await response.json();
       setProject(data);
     } catch {
-      setError('Failed to load project');
+      setError("Failed to load project");
     } finally {
       setLoading(false);
     }
@@ -79,14 +99,14 @@ export default function ProjectDetailPage() {
   }, [params.slug, fetchProject]);
 
   useEffect(() => {
-    const donationSuccess = searchParams.get('donation_success');
-    const orderId = searchParams.get('order_id');
-    
-    if (donationSuccess === 'true' && orderId) {
+    const donationSuccess = searchParams.get("donation_success");
+    const orderId = searchParams.get("order_id");
+
+    if (donationSuccess === "true" && orderId) {
       setShowSuccessModal(true);
       setDonationAmount(1000);
       fetchProject();
-      window.history.replaceState({}, '', `/projects/${params.slug}`);
+      window.history.replaceState({}, "", `/projects/${params.slug}`);
     }
   }, [searchParams, params.slug, fetchProject]);
 
@@ -105,45 +125,57 @@ export default function ProjectDetailPage() {
       strength: <Zap className="w-5 h-5 text-green-600" />,
       weakness: <AlertTriangle className="w-5 h-5 text-red-600" />,
       opportunities: <TrendingUp className="w-5 h-5 text-blue-600" />,
-      threat: <Target className="w-5 h-5 text-orange-600" />
+      threat: <Target className="w-5 h-5 text-orange-600" />,
     };
-    return icons[type as keyof typeof icons] || <Heart className="w-5 h-5 text-gray-600" />;
+    return (
+      icons[type as keyof typeof icons] || (
+        <Heart className="w-5 h-5 text-gray-600" />
+      )
+    );
   };
 
   const getInsightGradient = (type: string): string => {
     const gradients = {
-      strength: 'from-green-500 to-emerald-600',
-      weakness: 'from-red-500 to-red-600',
-      opportunities: 'from-blue-500 to-blue-600',
-      threat: 'from-orange-500 to-orange-600'
+      strength: "from-green-500 to-emerald-600",
+      weakness: "from-red-500 to-red-600",
+      opportunities: "from-blue-500 to-blue-600",
+      threat: "from-orange-500 to-orange-600",
     };
-    return gradients[type as keyof typeof gradients] || 'from-gray-500 to-gray-600';
+    return (
+      gradients[type as keyof typeof gradients] || "from-gray-500 to-gray-600"
+    );
   };
 
   const getInsightBorder = (type: string): string => {
     const borders = {
-      strength: 'border-green-200 hover:border-green-300',
-      weakness: 'border-red-200 hover:border-red-300',
-      opportunities: 'border-blue-200 hover:border-blue-300',
-      threat: 'border-orange-200 hover:border-orange-300'
+      strength: "border-green-200 hover:border-green-300",
+      weakness: "border-red-200 hover:border-red-300",
+      opportunities: "border-blue-200 hover:border-blue-300",
+      threat: "border-orange-200 hover:border-orange-300",
     };
-    return borders[type as keyof typeof borders] || 'border-gray-200 hover:border-gray-300';
+    return (
+      borders[type as keyof typeof borders] ||
+      "border-gray-200 hover:border-gray-300"
+    );
   };
 
   const getBadgeStyle = (type: string): string => {
     const styles = {
-      strength: 'bg-green-100 text-green-800 border-green-200',
-      weakness: 'bg-red-100 text-red-800 border-red-200',
-      opportunities: 'bg-blue-100 text-blue-800 border-blue-200',
-      threat: 'bg-orange-100 text-orange-800 border-orange-200'
+      strength: "bg-green-100 text-green-800 border-green-200",
+      weakness: "bg-red-100 text-red-800 border-red-200",
+      opportunities: "bg-blue-100 text-blue-800 border-blue-200",
+      threat: "bg-orange-100 text-orange-800 border-orange-200",
     };
-    return styles[type as keyof typeof styles] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return (
+      styles[type as keyof typeof styles] ||
+      "bg-gray-100 text-gray-800 border-gray-200"
+    );
   };
 
   const toggleInsightExpansion = (key: string) => {
-    setExpandedInsights(prev => ({
+    setExpandedInsights((prev) => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: !prev[key],
     }));
   };
 
@@ -153,8 +185,8 @@ export default function ProjectDetailPage() {
 
   if (error || !project) {
     return (
-      <ErrorMessage 
-        title="Project Not Found" 
+      <ErrorMessage
+        title="Project Not Found"
         message="The project you're looking for doesn't exist."
         showHomeButton={true}
       />
@@ -164,10 +196,10 @@ export default function ProjectDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <MidtransScript />
-      
+
       {/* Owner Toggle Component */}
       {/* <OwnerToggle onToggle={handleOwnerToggle} /> */}
-      
+
       {/* Modals */}
       <SuccessModal
         isOpen={showSuccessModal}
@@ -185,7 +217,7 @@ export default function ProjectDetailPage() {
         isFundingComplete={project.isFundingComplete}
         onDonationSuccess={handleDonationSuccess}
       />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Project Header */}
         <ProjectHeader
@@ -231,11 +263,17 @@ export default function ProjectDetailPage() {
                   <Heart className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">About This Project</h2>
-                  <p className="text-sm text-gray-600">Learn more about this initiative</p>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    About This Project
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    Learn more about this initiative
+                  </p>
                 </div>
               </div>
-              <p className="text-gray-700 leading-relaxed text-lg">{project.description}</p>
+              <p className="text-gray-700 leading-relaxed text-lg">
+                {project.description}
+              </p>
             </div>
 
             {/* Funding Progress Component */}
@@ -253,171 +291,210 @@ export default function ProjectDetailPage() {
             )} */}
 
             {/* Project Chat */}
-            {/* <ProjectChat
-              projectSlug={project.slug}
-              isOwner={isOwner}
-            /> */}
+            <ProjectChat projectSlug={project.slug} isOwner={isOwner} />
 
             {/* Recent Donations */}
-            <RecentDonations 
-              donations={project.donations} 
+            <RecentDonations
+              donations={project.donations}
               projectSlug={project.slug}
             />
 
             {/* AI Insights Section - Added here, after Recent Donations */}
-            {project.aiInsights && Object.keys(project.aiInsights).length > 0 && (
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-white" />
+            {project.aiInsights &&
+              Object.keys(project.aiInsights).length > 0 && (
+                <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-800">
+                        AI Project Analysis
+                      </h2>
+                      <p className="text-sm text-gray-600">
+                        Strategic insights powered by artificial intelligence
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-800">AI Project Analysis</h2>
-                    <p className="text-sm text-gray-600">Strategic insights powered by artificial intelligence</p>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {Object.entries(project.aiInsights as Record<string, SwotCard>)
-                    .filter(([key]) => key === 'strength' || key === 'opportunities')
-                    .map(([key, insight]) => {
-                      const isExpanded = expandedInsights[key] || false;
-                      
-                      return (
-                        <div
-                          key={key}
-                          className={`group relative rounded-xl border-2 transition-all duration-300 hover:shadow-lg ${getInsightBorder(key)} bg-gradient-to-br from-white to-gray-50 hover:from-white hover:to-white overflow-hidden`}
-                        >
-                          {/* Decorative Background Pattern */}
-                          <div className="absolute top-0 right-0 w-20 h-20 opacity-5 overflow-hidden rounded-xl">
-                            <div className={`w-full h-full bg-gradient-to-br ${getInsightGradient(key)} transform rotate-12 scale-150`}></div>
-                          </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {Object.entries(
+                      project.aiInsights as Record<string, SwotCard>
+                    )
+                      .filter(
+                        ([key]) => key === "strength" || key === "opportunities"
+                      )
+                      .map(([key, insight]) => {
+                        const isExpanded = expandedInsights[key] || false;
 
-                          {/* Main Card Content */}
-                          <div className="relative p-6">
-                            {/* Header */}
-                            <div className="flex items-start justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 bg-gradient-to-r ${getInsightGradient(key)} rounded-lg flex items-center justify-center`}>
-                                  {getInsightIcon(key)}
+                        return (
+                          <div
+                            key={key}
+                            className={`group relative rounded-xl border-2 transition-all duration-300 hover:shadow-lg ${getInsightBorder(
+                              key
+                            )} bg-gradient-to-br from-white to-gray-50 hover:from-white hover:to-white overflow-hidden`}
+                          >
+                            {/* Decorative Background Pattern */}
+                            <div className="absolute top-0 right-0 w-20 h-20 opacity-5 overflow-hidden rounded-xl">
+                              <div
+                                className={`w-full h-full bg-gradient-to-br ${getInsightGradient(
+                                  key
+                                )} transform rotate-12 scale-150`}
+                              ></div>
+                            </div>
+
+                            {/* Main Card Content */}
+                            <div className="relative p-6">
+                              {/* Header */}
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={`w-8 h-8 bg-gradient-to-r ${getInsightGradient(
+                                      key
+                                    )} rounded-lg flex items-center justify-center`}
+                                  >
+                                    {getInsightIcon(key)}
+                                  </div>
+                                  <div>
+                                    <h3 className="text-lg font-bold text-gray-900 capitalize group-hover:text-gray-800 transition-colors">
+                                      {key === "opportunities"
+                                        ? "Opportunities"
+                                        : key.replace(/([A-Z])/g, " $1").trim()}
+                                    </h3>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h3 className="text-lg font-bold text-gray-900 capitalize group-hover:text-gray-800 transition-colors">
-                                    {key === 'opportunities' ? 'Opportunities' : key.replace(/([A-Z])/g, ' $1').trim()}
-                                  </h3>
-                                </div>
+                                <span
+                                  className={`px-3 py-1 text-xs font-medium rounded-full border ${getBadgeStyle(
+                                    key
+                                  )} transition-all duration-200`}
+                                >
+                                  {insight.badge}
+                                </span>
                               </div>
-                              <span className={`px-3 py-1 text-xs font-medium rounded-full border ${getBadgeStyle(key)} transition-all duration-200`}>
-                                {insight.badge}
-                              </span>
-                            </div>
 
-                            {/* Always Visible Content */}
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-gray-800 leading-snug">
-                                {insight.title}
-                              </h4>
-                              <p className="text-sm text-gray-600 leading-relaxed">
-                                {insight.excerpt}
-                              </p>
-                            </div>
-
-                            {/* Expandable Content */}
-                            <div className={`transition-all duration-300 overflow-hidden ${isExpanded ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
-                              <div className="pt-3 border-t border-gray-100">
-                                <p className="text-sm text-gray-500 leading-relaxed">
-                                  {insight.description}
+                              {/* Always Visible Content */}
+                              <div className="space-y-3">
+                                <h4 className="font-semibold text-gray-800 leading-snug">
+                                  {insight.title}
+                                </h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">
+                                  {insight.excerpt}
                                 </p>
                               </div>
+
+                              {/* Expandable Content */}
+                              <div
+                                className={`transition-all duration-300 overflow-hidden ${
+                                  isExpanded
+                                    ? "max-h-96 opacity-100 mt-4"
+                                    : "max-h-0 opacity-0"
+                                }`}
+                              >
+                                <div className="pt-3 border-t border-gray-100">
+                                  <p className="text-sm text-gray-500 leading-relaxed">
+                                    {insight.description}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Toggle Button */}
+                              <button
+                                onClick={() => toggleInsightExpansion(key)}
+                                className={`w-full mt-4 py-2 px-4 rounded-lg border transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium ${
+                                  isExpanded
+                                    ? `${getBadgeStyle(key)} hover:opacity-80`
+                                    : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                                }`}
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    Show Less
+                                    <ChevronUp className="w-4 h-4" />
+                                  </>
+                                ) : (
+                                  <>
+                                    Show Details
+                                    <ChevronDown className="w-4 h-4" />
+                                  </>
+                                )}
+                              </button>
                             </div>
 
-                            {/* Toggle Button */}
-                            <button
-                              onClick={() => toggleInsightExpansion(key)}
-                              className={`w-full mt-4 py-2 px-4 rounded-lg border transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium ${
-                                isExpanded 
-                                  ? `${getBadgeStyle(key)} hover:opacity-80` 
-                                  : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-                              }`}
-                            >
-                              {isExpanded ? (
-                                <>
-                                  Show Less
-                                  <ChevronUp className="w-4 h-4" />
-                                </>
-                              ) : (
-                                <>
-                                  Show Details
-                                  <ChevronDown className="w-4 h-4" />
-                                </>
-                              )}
-                            </button>
+                            {/* Hover Effect Border */}
+                            <div
+                              className={`absolute inset-0 rounded-xl bg-gradient-to-r ${getInsightGradient(
+                                key
+                              )} opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none`}
+                            ></div>
                           </div>
+                        );
+                      })}
+                  </div>
 
-                          {/* Hover Effect Border */}
-                          <div className={`absolute inset-0 rounded-xl bg-gradient-to-r ${getInsightGradient(key)} opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none`}></div>
-                        </div>
-                      );
-                    })}
-                </div>
-
-                {/* Additional Info */}
-                <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
-                  <div className="flex items-center gap-2 text-sm text-purple-700">
-                    <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs">✨</span>
+                  {/* Additional Info */}
+                  <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                    <div className="flex items-center gap-2 text-sm text-purple-700">
+                      <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">✨</span>
+                      </div>
+                      <span className="font-medium">AI-Powered Analysis:</span>
+                      <span>
+                        This assessment highlights the project&apos;s strengths
+                        and growth opportunities
+                      </span>
                     </div>
-                    <span className="font-medium">AI-Powered Analysis:</span>
-                    <span>This assessment highlights the project&apos;s strengths and growth opportunities</span>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-{/* Impact Metrics Section */}
-            {project.impactMetrics && project.impactMetrics.length > 0 && (
+            {/* Impact Metrics Section */}
+            {project.impactMetrics && (
               <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center">
                     <BarChart3 className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Expected Impact</h2>
-                    <p className="text-sm text-gray-600">Measurable outcomes this project aims to achieve</p>
+                    <h2 className="text-2xl font-bold text-gray-800">
+                      Expected Impact
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      Measurable outcomes this project aims to achieve
+                    </p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {project.impactMetrics.map((metric, index) => (
-                    <div
-                      key={index}
-                      className="group relative p-6 rounded-xl border border-emerald-200 hover:border-emerald-300 bg-gradient-to-br from-emerald-50 to-white hover:from-emerald-100 hover:to-emerald-50 transition-all duration-300 hover:shadow-lg"
-                    >
-                      {/* Decorative Background Pattern */}
-                      <div className="absolute top-0 right-0 w-16 h-16 opacity-10 overflow-hidden rounded-xl">
-                        <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-emerald-600 transform rotate-12 scale-150"></div>
-                      </div>
-
-                      <div className="relative">
-                        {/* Number Display */}
-                        <div className="mb-4">
-                          <div className="text-3xl font-bold text-emerald-600 group-hover:text-emerald-700 transition-colors">
-                            {metric.number.toLocaleString()}
-                          </div>
-                        </div>
-
-                        {/* Description */}
-                        <div className="space-y-2">
-                          <p className="text-sm text-gray-700 leading-relaxed font-medium">
-                            {metric.description}
-                          </p>
-                        </div>
-
-                        {/* Decorative Element */}
-                        <div className="mt-4 w-12 h-1 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full group-hover:from-emerald-500 group-hover:to-emerald-600 transition-all duration-300"></div>
-                      </div>
+                  <div
+                    key="impact-metric"
+                    className="group relative p-6 rounded-xl border border-emerald-200 hover:border-emerald-300 bg-gradient-to-br from-emerald-50 to-white hover:from-emerald-100 hover:to-emerald-50 transition-all duration-300 hover:shadow-lg"
+                  >
+                    {/* Decorative Background Pattern */}
+                    <div className="absolute top-0 right-0 w-16 h-16 opacity-10 overflow-hidden rounded-xl">
+                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-emerald-600 transform rotate-12 scale-150"></div>
                     </div>
-                  ))}
+
+                    <div className="relative">
+                      {/* Number Display */}
+                      <div className="mb-4">
+                        <div className="text-3xl font-bold text-emerald-600 group-hover:text-emerald-700 transition-colors">
+                          {project.impactMetrics?.number?.toLocaleString() ||
+                            "0"}
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-700 leading-relaxed font-medium">
+                          {project.impactMetrics?.description ||
+                            "No description available"}
+                        </p>
+                      </div>
+
+                      {/* Decorative Element */}
+                      <div className="mt-4 w-12 h-1 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full group-hover:from-emerald-500 group-hover:to-emerald-600 transition-all duration-300"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -430,8 +507,12 @@ export default function ProjectDetailPage() {
                     <FileText className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Project Proposal</h2>
-                    <p className="text-sm text-gray-600">Detailed project documentation and planning</p>
+                    <h2 className="text-2xl font-bold text-gray-800">
+                      Project Proposal
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      Detailed project documentation and planning
+                    </p>
                   </div>
                 </div>
 
@@ -443,19 +524,20 @@ export default function ProjectDetailPage() {
                         <div className="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center">
                           <span className="text-white text-xs">✨</span>
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-800">AI-Generated Proposal</h3>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          AI-Generated Proposal
+                        </h3>
                         <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 border border-blue-200">
                           AI Enhanced
                         </span>
                       </div>
-                      
+
                       {/* Preview Text */}
                       <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed mb-4">
                         <p>
-                          {project.aiProposal.length > 300 
-                            ? `${project.aiProposal.substring(0, 300)}...` 
-                            : project.aiProposal
-                          }
+                          {project.aiProposal.length > 300
+                            ? `${project.aiProposal.substring(0, 300)}...`
+                            : project.aiProposal}
                         </p>
                       </div>
 
@@ -478,14 +560,17 @@ export default function ProjectDetailPage() {
                       <div className="w-6 h-6 bg-gray-500 rounded-lg flex items-center justify-center">
                         <FileText className="w-3 h-3 text-white" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-800">Proposal Document</h3>
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        Proposal Document
+                      </h3>
                       <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200">
                         PDF/Document
                       </span>
                     </div>
-                    
+
                     <p className="text-sm text-gray-600 mb-4">
-                      Access the complete project proposal document with detailed specifications, timelines, and budget breakdown.
+                      Access the complete project proposal document with
+                      detailed specifications, timelines, and budget breakdown.
                     </p>
 
                     {/* Download/View Button */}
@@ -508,18 +593,26 @@ export default function ProjectDetailPage() {
                       <div className="w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
                         <span className="text-white text-xs">💡</span>
                       </div>
-                      <span className="font-medium">Comprehensive Documentation:</span>
-                      <span>This project includes both AI-enhanced insights and traditional documentation</span>
+                      <span className="font-medium">
+                        Comprehensive Documentation:
+                      </span>
+                      <span>
+                        This project includes both AI-enhanced insights and
+                        traditional documentation
+                      </span>
                     </div>
                   </div>
                 )}
               </div>
             )}
-
           </div>
 
           {/* Sidebar */}
-          <div className={`lg:col-span-1 ${sidebarOpen ? 'block' : 'hidden lg:block'}`}>
+          <div
+            className={`lg:col-span-1 ${
+              sidebarOpen ? "block" : "hidden lg:block"
+            }`}
+          >
             <ProjectSidebar
               isFundingComplete={project.isFundingComplete}
               completedAt={project.completedAt}
@@ -534,13 +627,7 @@ export default function ProjectDetailPage() {
       </div>
     </div>
   );
-
-
-
-
- 
-} 
-
+}
 
 // 'use client';
 
@@ -567,7 +654,7 @@ export default function ProjectDetailPage() {
 //         // Await the params Promise
 //         const resolvedParams = await params;
 //         setSlug(resolvedParams.slug);
-        
+
 //         const response = await fetch(`/api/projects/${resolvedParams.slug}`);
 //         if (response.ok) {
 //           const projectData = await response.json();
@@ -589,7 +676,7 @@ export default function ProjectDetailPage() {
 //   const getCardStyle = (type: string): string => {
 //     const styles: Record<string, string> = {
 //       strength: 'border-green-200 bg-green-50',
-//       weakness: 'border-red-200 bg-red-50', 
+//       weakness: 'border-red-200 bg-red-50',
 //       opportunities: 'border-blue-200 bg-blue-50',
 //       threat: 'border-orange-200 bg-orange-50'
 //     };
@@ -600,7 +687,7 @@ export default function ProjectDetailPage() {
 //     const styles: Record<string, string> = {
 //       strength: 'bg-green-100 text-green-800',
 //       weakness: 'bg-red-100 text-red-800',
-//       opportunities: 'bg-blue-100 text-blue-800', 
+//       opportunities: 'bg-blue-100 text-blue-800',
 //       threat: 'bg-orange-100 text-orange-800'
 //     };
 //     return styles[type] || 'bg-gray-100 text-gray-800';
@@ -739,7 +826,7 @@ export default function ProjectDetailPage() {
 //                           />
 //                         </svg>
 //                       </div>
-                      
+
 //                       <div className="relative">
 //                         <div className="flex items-center justify-between mb-3">
 //                           <h3 className="text-lg font-bold text-gray-900 capitalize">
@@ -749,7 +836,7 @@ export default function ProjectDetailPage() {
 //                             {insight.badge}
 //                           </span>
 //                         </div>
-                        
+
 //                         <h4 className="font-semibold text-gray-800 mb-2">{insight.title}</h4>
 //                         <p className="text-sm text-gray-600 mb-3">{insight.excerpt}</p>
 //                         <p className="text-xs text-gray-500">{insight.description}</p>
@@ -778,7 +865,7 @@ export default function ProjectDetailPage() {
 //                       </a>
 //                     </div>
 //                   )}
-                  
+
 //                   {project.aiProposal && (
 //                     <div>
 //                       <h3 className="font-medium text-gray-900 mb-2">AI-Generated Proposal</h3>
@@ -822,14 +909,14 @@ export default function ProjectDetailPage() {
 //                 <div>
 //                   <span className="font-medium text-gray-700">Fundraising:</span>
 //                   <div className="text-gray-600">
-//                     {new Date(project.fundraisingStartDate).toLocaleDateString()} - 
+//                     {new Date(project.fundraisingStartDate).toLocaleDateString()} -
 //                     {new Date(project.fundraisingEndDate).toLocaleDateString()}
 //                   </div>
 //                 </div>
 //                 <div>
 //                   <span className="font-medium text-gray-700">Project Implementation:</span>
 //                   <div className="text-gray-600">
-//                     {new Date(project.projectStartDate).toLocaleDateString()} - 
+//                     {new Date(project.projectStartDate).toLocaleDateString()} -
 //                     {new Date(project.projectEndDate).toLocaleDateString()}
 //                   </div>
 //                 </div>
