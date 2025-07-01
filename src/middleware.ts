@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import * as jose from "jose";
 import { NextRequest, NextResponse } from "next/server";
-import { errorHandler } from "./helper/errorHandler";
+import { errorHandler } from "./server/helper/errorHandler";
 
 export async function middleware(request: NextRequest) {
    try {
@@ -11,7 +11,8 @@ export async function middleware(request: NextRequest) {
       if (
          pathname.startsWith("/api/auth") ||
          pathname.startsWith("/api/login") ||
-         pathname.startsWith("/api/register")
+         pathname.startsWith("/api/register") ||
+         pathname.startsWith("/api/googleLogin")
       ) {
          return NextResponse.next();
       }
@@ -34,6 +35,11 @@ export async function middleware(request: NextRequest) {
                headers: requestHeaders,
             },
          });
+
+         // console.log(payload, "ini payloadd lhoww")
+
+         // const response = NextResponse.next();
+
          response.headers.set("x-user-id", payload._id);
          response.headers.set("x-user-email", payload.email);
          response.headers.set("x-user-username", payload.username);
