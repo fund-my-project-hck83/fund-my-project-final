@@ -21,7 +21,7 @@ export default function TrendingProjects({ projects }: TrendingProjectsProps) {
     return Math.min(Math.round((current / goal) * 100), 100);
   };
 
-  const trendingProjects = projects.slice(0, 6);
+  const trendingProjects = projects
 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">

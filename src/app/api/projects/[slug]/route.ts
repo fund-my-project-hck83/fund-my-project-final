@@ -17,7 +17,7 @@ export async function GET(
   try {
     const { slug } = await context.params;
 
-    console.log(request)
+    // console.log(request, "ini yang baruuuuuuuu")
     
     const db = getDb();
     
