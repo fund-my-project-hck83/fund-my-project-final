@@ -5,8 +5,23 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const limit = parseInt(searchParams.get('limit') || '8');
+        const method = searchParams.get('method') || 'advanced'; // 'advanced', 'percentage', 'amount'
         
-        const projects = await ProjectModel.findTrendingProjects(limit);
+        let projects;
+        
+        switch (method) {
+            case 'percentage':
+                projects = await ProjectModel.findTrendingByFundingPercentage(limit);
+                break;
+            case 'amount':
+                projects = await ProjectModel.findTrendingByAmount(limit);
+                break;
+            case 'advanced':
+            default:
+                projects = await ProjectModel.findTrendingProjects(limit);
+                break;
+        }
+        
         return new Response(JSON.stringify(projects), {
             status: 200,
             headers: { "Content-Type": "application/json" },

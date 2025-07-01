@@ -2,17 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { Project } from '@/server/models/ProjectModel';
+import Navbar from '@/components/Navbar';
 
 export default function TrendingProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [limit, setLimit] = useState(8);
+  const [method, setMethod] = useState<'percentage' | 'amount'>('percentage');
 
   useEffect(() => {
     const fetchTrendingProjects = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/projects/trending?limit=${limit}`);
+        const response = await fetch(`/api/projects/trending?limit=${limit}&method=${method}`);
         const data = await response.json();
         setProjects(data);
       } catch (error) {
@@ -23,7 +25,7 @@ export default function TrendingProjectsPage() {
     };
 
     fetchTrendingProjects();
-  }, [limit]);
+  }, [limit, method]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -48,32 +50,49 @@ export default function TrendingProjectsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                🔥 Proyek Trending
+                🔥 Trending Projects
               </h1>
               <p className="mt-2 text-gray-600">
-                Proyek-proyek dengan funding terbanyak yang sedang aktif
+                {method === 'percentage' && 'Projects with highest progress percentage (approaching target)'}
+                {method === 'amount' && 'Projects with highest funding collected (absolute amount)'}
               </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <label className="text-sm font-medium text-gray-700">
-                Tampilkan:
-              </label>
-              <select
-                value={limit}
-                onChange={(e) => setLimit(parseInt(e.target.value))}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              >
-                <option value={4}>4 Proyek</option>
-                <option value={8}>8 Proyek</option>
-                <option value={12}>12 Proyek</option>
-                <option value={16}>16 Proyek</option>
-              </select>
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Metode Trending:
+                </label>
+                <select
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value as 'percentage' | 'amount')}
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                >
+                  <option value="percentage">                        Approaching Target</option>
+                  <option value="amount">                        Highest Funding</option>
+                </select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Tampilkan:
+                </label>
+                <select
+                  value={limit}
+                  onChange={(e) => setLimit(parseInt(e.target.value))}
+                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                >
+                  <option value={4}>4 Projects</option>
+                  <option value={8}>8 Projects</option>
+                  <option value={12}>12 Projects</option>
+                  <option value={16}>16 Projects</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -102,37 +121,14 @@ export default function TrendingProjectsPage() {
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📊</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Tidak ada proyek trending
+              No trending projects
             </h3>
             <p className="text-gray-600">
-              Belum ada proyek yang sedang trending saat ini.
+              No projects are currently trending.
             </p>
           </div>
         ) : (
           <>
-            <div className="mb-6">
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Total Proyek Trending
-                    </h2>
-                    <p className="text-3xl font-bold text-emerald-600 mt-1">
-                      {projects.length}
-                    </p>
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Total Funding Terkumpul
-                    </h2>
-                    <p className="text-2xl font-bold text-blue-600 mt-1">
-                      {formatCurrency(projects.reduce((sum, p) => sum + p.currentFunding, 0))}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {projects.map((project, index) => (
                 <div key={project._id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -216,12 +212,12 @@ export default function TrendingProjectsPage() {
 
                     {/* End Date */}
                     <div className="text-xs text-gray-500 mb-4">
-                      Berakhir: {formatDate(project.fundraisingEndDate)}
+                      Ends: {formatDate(project.fundraisingEndDate)}
                     </div>
 
                     {/* Action Button */}
                     <button className="w-full bg-emerald-600 text-white py-2 rounded-lg font-semibold hover:bg-emerald-700 transition-colors">
-                      Lihat Detail
+                      Donate Now
                     </button>
                   </div>
                 </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Navbar from '@/components/Navbar';
 import FormWrapper, { ProjectFormData } from '@/components/ProjectForm/FormWrapper';
 import Page1BasicInfo from '@/components/ProjectForm/Page1BasicInfo';
 import Page2Impact from '@/components/ProjectForm/Page2Impact';
