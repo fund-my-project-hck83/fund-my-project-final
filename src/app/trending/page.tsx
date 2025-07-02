@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Project } from '@/server/models/ProjectModel';
-import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 
 export default function TrendingPage() {
@@ -51,7 +50,6 @@ export default function TrendingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">

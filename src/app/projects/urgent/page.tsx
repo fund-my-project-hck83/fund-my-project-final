@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Project } from '@/server/models/ProjectModel';
-import Navbar from '@/components/Navbar';
 
 export default function UrgentPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -104,7 +103,6 @@ export default function UrgentPage() {
 
   return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
       
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
