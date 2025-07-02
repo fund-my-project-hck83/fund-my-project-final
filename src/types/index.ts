@@ -84,22 +84,13 @@ export interface Donation {
   updatedAt: Date
 }
 
-interface Forum {
-  userId: string
-  projectId: string
-  message: string
-  messageDate: Date
-  createdAt: Date
-  updatedAt: Date
-}
-
-interface Livestream {
-  projectId: string
-  userId: string
-  startTime: string
-  streamScheduleDate: Date
-  livestreamImage: string
-  description: string
-  createdAt: Date
-  updatedAt: Date
-}
+// interface Livestream {
+//   projectId: string
+//   userId: string
+//   startTime: string
+//   streamScheduleDate: Date
+//   livestreamImage: string
+//   description: string
+//   createdAt: Date
+//   updatedAt: Date
+// }

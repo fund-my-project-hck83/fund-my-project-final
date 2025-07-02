@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Project } from '@/server/models/ProjectModel';
-import Navbar from '@/components/Navbar';
 
 export default function UrgentPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [limit, setLimit] = useState(15);
+  const [limit] = useState(15);
   const [includeCompleted, setIncludeCompleted] = useState(false);
 
   useEffect(() => {
@@ -104,7 +103,6 @@ export default function UrgentPage() {
 
   return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
       
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -164,7 +162,7 @@ export default function UrgentPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {projects.map((project, index) => {
+              {projects.map((project) => {
                 const progress = calculateProgress(project.currentFunding, project.fundingGoal);
                 const projectStatus = getProjectStatus(project);
                 

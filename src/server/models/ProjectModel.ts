@@ -2,60 +2,60 @@ import { Filter } from "mongodb";
 import { getDb } from "../config/mongodb";
 
 export interface Project {
-  _id: string
-  ownerId: string
-  name: string
-  description: string
-  fundingGoal: number
-  currentFunding: number
-  fundraisingStartDate: Date
-  fundraisingEndDate: Date
-  projectStartDate: Date
-  projectEndDate: Date
-  location: string
+  _id: string;
+  ownerId: string;
+  name: string;
+  description: string;
+  fundingGoal: number;
+  currentFunding: number;
+  fundraisingStartDate: Date;
+  fundraisingEndDate: Date;
+  projectStartDate: Date;
+  projectEndDate: Date;
+  location: string;
   aiInsights?: {
     weakness: {
-      title: string
-      description: string
-      excerpt: string
-      badge: string
-    },
+      title: string;
+      description: string;
+      excerpt: string;
+      badge: string;
+    };
     strength: {
-      title: string
-      description: string
-      excerpt: string
-      badge: string
-    },
+      title: string;
+      description: string;
+      excerpt: string;
+      badge: string;
+    };
     opportunities: {
-      title: string
-      description: string
-      excerpt: string
-      badge: string
-    },
+      title: string;
+      description: string;
+      excerpt: string;
+      badge: string;
+    };
     threat: {
-      title: string
-      description: string
-      excerpt: string
-      badge: string
-    }
-  }
-  aiProposal?: string
-  proposalDocumentUrl?: string
+      title: string;
+      description: string;
+      excerpt: string;
+      badge: string;
+    };
+  };
+  aiProposal?: string;
+  proposalDocumentUrl?: string;
   impactMetrics: Array<{
-    number: number
-    description: string
+    number: number;
+    description: string;
   }>;
-  isFundingComplete: boolean
-  completedAt?: Date
-  isLive?: boolean
-  projectImage: string
-  slug: string
-  createdAt: Date
-  updatedAt: Date
+  isFundingComplete: boolean;
+  completedAt?: Date;
+  isLive?: boolean;
+  projectImage: string;
+  slug: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export default class ProjectModel {
-  static getCollection(){
+  static getCollection() {
     return getDb().collection<Project>("projects");
   }
 
@@ -66,96 +66,98 @@ export default class ProjectModel {
 
   static async searchByProjectName(projectName: string) {
     const collection = this.getCollection();
-    return collection.find({ name: { $regex: projectName, $options: "i" } }).toArray();
+    return collection
+      .find({ name: { $regex: projectName, $options: "i" } })
+      .toArray();
   }
-  
+
   // Find active projects with pagination, search by project name, sorted by closest end date
   static async findWithPagination(
-        search?: string | null,
-        page: number = 1,
-        limit: number = 1
-    ) {
-        const collection = this.getCollection();
-        const skip = (page - 1) * limit;
+    search?: string | null,
+    page: number = 1,
+    limit: number = 1
+  ) {
+    const collection = this.getCollection();
+    const skip = (page - 1) * limit;
 
-        // Base query for active projects only
-        let baseQuery: Filter<Project> = {
-            isFundingComplete: false,
-            // Handle both Date objects and string dates for active projects
-            $or: [
-                { fundraisingEndDate: { $gt: new Date() } },
-                { 
-                    $and: [
-                        { fundraisingEndDate: { $type: "string" } },
-                        { fundraisingEndDate: { $exists: true } }
-                    ]
-                }
-            ]
-        };
+    // Base query for active projects only
+    let baseQuery: Filter<Project> = {
+      isFundingComplete: false,
+      // Handle both Date objects and string dates for active projects
+      $or: [
+        { fundraisingEndDate: { $gt: new Date() } },
+        {
+          $and: [
+            { fundraisingEndDate: { $type: "string" } },
+            { fundraisingEndDate: { $exists: true } },
+          ],
+        },
+      ],
+    };
 
-        // Add search filter if provided
-        if (search && search.trim()) {
-            const searchRegex = new RegExp(search.trim(), "i");
-            baseQuery = {
-                ...baseQuery,
-                name: searchRegex // Search only by project name (case-insensitive)
-            };
-        }
-
-        // Use aggregation pipeline for sorting by closest end date
-        const pipeline: any[] = [
-            {
-                $match: baseQuery
-            },
-            {
-                $addFields: {
-                    // Convert string dates to Date objects for sorting
-                    sortDate: {
-                        $cond: {
-                            if: { $eq: [{ $type: "$fundraisingEndDate" }, "date"] },
-                            then: "$fundraisingEndDate",
-                            else: {
-                                // For string dates, use a far future date to sort them at the end
-                                $dateFromString: {
-                                    dateString: "2099-12-31",
-                                    onError: new Date("2099-12-31")
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            {
-                $sort: { 
-                    sortDate: 1  // Sort by closest end date first (ascending)
-                }
-            },
-            {
-                $skip: skip
-            },
-            {
-                $limit: limit
-            },
-            {
-                $project: {
-                    sortDate: 0  // Remove the helper field
-                }
-            }
-        ];
-
-        return collection.aggregate(pipeline).toArray();
+    // Add search filter if provided
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), "i");
+      baseQuery = {
+        ...baseQuery,
+        name: searchRegex, // Search only by project name (case-insensitive)
+      };
     }
+
+    // Use aggregation pipeline for sorting by closest end date
+    const pipeline: object[] = [
+      {
+        $match: baseQuery,
+      },
+      {
+        $addFields: {
+          // Convert string dates to Date objects for sorting
+          sortDate: {
+            $cond: {
+              if: { $eq: [{ $type: "$fundraisingEndDate" }, "date"] },
+              then: "$fundraisingEndDate",
+              else: {
+                // For string dates, use a far future date to sort them at the end
+                $dateFromString: {
+                  dateString: "2099-12-31",
+                  onError: new Date("2099-12-31"),
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $sort: {
+          sortDate: 1, // Sort by closest end date first (ascending)
+        },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+      {
+        $project: {
+          sortDate: 0, // Remove the helper field
+        },
+      },
+    ];
+
+    return collection.aggregate(pipeline).toArray();
+  }
 
   static async findTrendingProjects(limit: number = 15) {
     const collection = this.getCollection();
-    
+
     // Use aggregation pipeline for more sophisticated trending logic
     const pipeline = [
       {
         $match: {
           isFundingComplete: false,
-          fundraisingEndDate: { $gt: new Date() }
-        }
+          fundraisingEndDate: { $gt: new Date() },
+        },
       },
       {
         $addFields: {
@@ -164,30 +166,45 @@ export default class ProjectModel {
             $cond: {
               if: { $gt: ["$fundingGoal", 0] },
               then: { $divide: ["$currentFunding", "$fundingGoal"] },
-              else: 0
-            }
+              else: 0,
+            },
           },
           // Calculate days since start
           daysSinceStart: {
             $divide: [
               { $subtract: [new Date(), "$fundraisingStartDate"] },
-              1000 * 60 * 60 * 24
-            ]
+              1000 * 60 * 60 * 24,
+            ],
           },
           // Calculate daily funding rate
           dailyFundingRate: {
             $cond: {
-              if: { $gt: [{ $divide: [{ $subtract: [new Date(), "$fundraisingStartDate"] }, 1000 * 60 * 60 * 24] }, 0] },
+              if: {
+                $gt: [
+                  {
+                    $divide: [
+                      { $subtract: [new Date(), "$fundraisingStartDate"] },
+                      1000 * 60 * 60 * 24,
+                    ],
+                  },
+                  0,
+                ],
+              },
               then: {
                 $divide: [
                   "$currentFunding",
-                  { $divide: [{ $subtract: [new Date(), "$fundraisingStartDate"] }, 1000 * 60 * 60 * 24] }
-                ]
+                  {
+                    $divide: [
+                      { $subtract: [new Date(), "$fundraisingStartDate"] },
+                      1000 * 60 * 60 * 24,
+                    ],
+                  },
+                ],
               },
-              else: 0
-            }
-          }
-        }
+              else: 0,
+            },
+          },
+        },
       },
       {
         $addFields: {
@@ -199,16 +216,16 @@ export default class ProjectModel {
               // Weight: 35% - Funding percentage (closer to goal gets higher score)
               { $multiply: ["$fundingPercentage", 0.35] },
               // Weight: 25% - Daily funding rate (momentum factor, normalized)
-              { $multiply: [{ $divide: ["$dailyFundingRate", 100000] }, 0.25] }
-            ]
-          }
-        }
+              { $multiply: [{ $divide: ["$dailyFundingRate", 100000] }, 0.25] },
+            ],
+          },
+        },
       },
       {
-        $sort: { trendingScore: -1 }
+        $sort: { trendingScore: -1 },
       },
       {
-        $limit: limit
+        $limit: limit,
       },
       {
         $project: {
@@ -216,24 +233,27 @@ export default class ProjectModel {
           daysSinceStart: 0,
           dailyFundingRate: 0,
           fundingPercentage: 0,
-          trendingScore: 0
-        }
-      }
+          trendingScore: 0,
+        },
+      },
     ];
 
     return collection.aggregate(pipeline).toArray();
   }
 
   // Method untuk urgent projects yang akan berakhir dalam 30 hari
-  static async findUrgentProjects(limit?: number, includeCompleted: boolean = false) {
+  static async findUrgentProjects(
+    limit?: number,
+    includeCompleted: boolean = false
+  ) {
     const collection = this.getCollection();
     const now = new Date();
     const maxDate = new Date();
     maxDate.setDate(maxDate.getDate() + 30); // Maksimal 30 hari ke depan
-    
+
     // Base query - conditional filtering based on includeCompleted + 30 days filter
-    let baseQuery: any = {};
-    
+    let baseQuery: Filter<Project> = {};
+
     if (!includeCompleted) {
       // Only active projects that will end within 30 days
       baseQuery = {
@@ -244,17 +264,17 @@ export default class ProjectModel {
             $and: [
               { fundraisingEndDate: { $type: "date" } },
               { fundraisingEndDate: { $gte: now } },
-              { fundraisingEndDate: { $lte: maxDate } }
-            ]
+              { fundraisingEndDate: { $lte: maxDate } },
+            ],
           },
           {
             // For string dates (include for manual verification)
             $and: [
               { fundraisingEndDate: { $type: "string" } },
-              { fundraisingEndDate: { $exists: true } }
-            ]
-          }
-        ]
+              { fundraisingEndDate: { $exists: true } },
+            ],
+          },
+        ],
       };
     } else {
       // ALL projects that will end within 30 days (no status filter)
@@ -264,23 +284,23 @@ export default class ProjectModel {
             // For Date objects within 30 days
             $and: [
               { fundraisingEndDate: { $type: "date" } },
-              { fundraisingEndDate: { $lte: maxDate } }
-            ]
+              { fundraisingEndDate: { $lte: maxDate } },
+            ],
           },
           {
             // For string dates (include for manual verification)
             $and: [
               { fundraisingEndDate: { $type: "string" } },
-              { fundraisingEndDate: { $exists: true } }
-            ]
-          }
-        ]
+              { fundraisingEndDate: { $exists: true } },
+            ],
+          },
+        ],
       };
     }
-    
-    const pipeline: any[] = [
+
+    const pipeline: object[] = [
       {
-        $match: baseQuery
+        $match: baseQuery,
       },
       {
         $addFields: {
@@ -292,10 +312,10 @@ export default class ProjectModel {
               else: {
                 $dateFromString: {
                   dateString: "$fundraisingEndDate",
-                  onError: new Date("2099-12-31") // Default for invalid dates
-                }
-              }
-            }
+                  onError: new Date("2099-12-31"), // Default for invalid dates
+                },
+              },
+            },
           },
           // Calculate days until fundraising ends (for urgency calculation)
           daysUntilEnd: {
@@ -309,18 +329,18 @@ export default class ProjectModel {
                       else: {
                         $dateFromString: {
                           dateString: "$fundraisingEndDate",
-                          onError: new Date("2099-12-31")
-                        }
-                      }
-                    }
+                          onError: new Date("2099-12-31"),
+                        },
+                      },
+                    },
                   },
-                  now
-                ]
+                  now,
+                ],
               },
-              1000 * 60 * 60 * 24 // Convert to days
-            ]
-          }
-        }
+              1000 * 60 * 60 * 24, // Convert to days
+            ],
+          },
+        },
       },
       {
         // Additional filter untuk memastikan hanya proyek dalam 30 hari (untuk string dates yang sudah dikonversi)
@@ -328,28 +348,28 @@ export default class ProjectModel {
           $or: [
             {
               // Date objects sudah difilter di base query
-              fundraisingEndDate: { $type: "date" }
+              fundraisingEndDate: { $type: "date" },
             },
             {
               // String dates yang dikonversi - filter maksimal 30 hari
               $and: [
                 { sortDate: { $lte: new Date(maxDate) } },
-                { sortDate: { $ne: new Date("2099-12-31") } } // Exclude invalid dates
-              ]
-            }
-          ]
-        }
+                { sortDate: { $ne: new Date("2099-12-31") } }, // Exclude invalid dates
+              ],
+            },
+          ],
+        },
       },
       {
-        $sort: { 
-          sortDate: 1  // Sort by fundraising end date (most urgent first)
-        }
+        $sort: {
+          sortDate: 1, // Sort by fundraising end date (most urgent first)
+        },
       },
       {
         $project: {
-          sortDate: 0  // Remove the helper field
-        }
-      }
+          sortDate: 0, // Remove the helper field
+        },
+      },
     ];
 
     if (limit) {
@@ -360,15 +380,19 @@ export default class ProjectModel {
   }
 
   // Legacy method untuk backward compatibility
-  static async findEndingSoon(days: number = 7, limit?: number, includeCompleted: boolean = false) {
+  static async findEndingSoon(
+    days: number = 7,
+    limit?: number,
+    includeCompleted: boolean = false
+  ) {
     const collection = this.getCollection();
     const now = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + days);
-    
+
     // Base query - conditional filtering based on includeCompleted
-    let baseQuery: any = {};
-    
+    let baseQuery: Filter<Project> = {};
+
     if (!includeCompleted) {
       // Original behavior: only active projects
       baseQuery = {
@@ -380,17 +404,17 @@ export default class ProjectModel {
             $and: [
               { fundraisingEndDate: { $type: "date" } },
               { fundraisingEndDate: { $gt: now } },
-              { fundraisingEndDate: { $lte: endDate } }
-            ]
+              { fundraisingEndDate: { $lte: endDate } },
+            ],
           },
           {
             // For string dates (accept all string dates for ending soon)
             $and: [
               { fundraisingEndDate: { $type: "string" } },
-              { fundraisingEndDate: { $exists: true } }
-            ]
-          }
-        ]
+              { fundraisingEndDate: { $exists: true } },
+            ],
+          },
+        ],
       };
     } else {
       // New behavior: ALL projects (active + completed) within date range
@@ -401,23 +425,23 @@ export default class ProjectModel {
             // For Date objects within date range
             $and: [
               { fundraisingEndDate: { $type: "date" } },
-              { fundraisingEndDate: { $lte: endDate } }
-            ]
+              { fundraisingEndDate: { $lte: endDate } },
+            ],
           },
           {
             // For string dates (accept all string dates)
             $and: [
               { fundraisingEndDate: { $type: "string" } },
-              { fundraisingEndDate: { $exists: true } }
-            ]
-          }
-        ]
+              { fundraisingEndDate: { $exists: true } },
+            ],
+          },
+        ],
       };
     }
-    
-    const pipeline: any[] = [
+
+    const pipeline: object[] = [
       {
-        $match: baseQuery
+        $match: baseQuery,
       },
       {
         $addFields: {
@@ -430,23 +454,23 @@ export default class ProjectModel {
                 // For string dates, use a far future date to sort them at the end
                 $dateFromString: {
                   dateString: "2099-12-31",
-                  onError: new Date("2099-12-31")
-                }
-              }
-            }
-          }
-        }
+                  onError: new Date("2099-12-31"),
+                },
+              },
+            },
+          },
+        },
       },
       {
-        $sort: { 
-          sortDate: 1  // Sort by closest end date first
-        }
+        $sort: {
+          sortDate: 1, // Sort by closest end date first
+        },
       },
       {
         $project: {
-          sortDate: 0  // Remove the helper field
-        }
-      }
+          sortDate: 0, // Remove the helper field
+        },
+      },
     ];
 
     if (limit) {
@@ -459,7 +483,7 @@ export default class ProjectModel {
   // Trending method prioritizing funding amount collected
   static async findTrendingByFundingPercentage(limit: number = 8) {
     const collection = this.getCollection();
-    
+
     const pipeline = [
       {
         $match: {
@@ -467,42 +491,39 @@ export default class ProjectModel {
           // Handle both Date objects and string dates
           $or: [
             { fundraisingEndDate: { $gt: new Date() } },
-            { 
+            {
               $and: [
                 { fundraisingEndDate: { $type: "string" } },
-                { fundraisingEndDate: { $exists: true } }
-              ]
-            }
+                { fundraisingEndDate: { $exists: true } },
+              ],
+            },
           ],
           fundingGoal: { $gt: 0 }, // Ensure valid funding goal
-          currentFunding: { $gt: 0 } // Must have some funding
-        }
+          currentFunding: { $gt: 0 }, // Must have some funding
+        },
       },
       {
         $addFields: {
           fundingPercentage: {
-            $multiply: [
-              { $divide: ["$currentFunding", "$fundingGoal"] },
-              100
-            ]
-          }
-        }
+            $multiply: [{ $divide: ["$currentFunding", "$fundingGoal"] }, 100],
+          },
+        },
       },
       {
         $sort: {
           fundingPercentage: -1, // Sort by highest percentage first
-          currentFunding: -1 // Secondary sort by amount for ties
-        }
+          currentFunding: -1, // Secondary sort by amount for ties
+        },
       },
       {
-        $limit: limit
+        $limit: limit,
       },
       {
         $project: {
           // Remove calculated fields from output
-          fundingPercentage: 0
-        }
-      }
+          fundingPercentage: 0,
+        },
+      },
     ];
 
     return collection.aggregate(pipeline).toArray();
@@ -511,27 +532,28 @@ export default class ProjectModel {
   // Alternative method - purely by current funding amount
   static async findTrendingByAmount(limit: number = 8) {
     const collection = this.getCollection();
-    return collection.find({ 
-      isFundingComplete: false,
-      fundraisingEndDate: { $gt: new Date() }
-    })
-    .sort({ currentFunding: -1 })
-    .limit(limit)
-    .toArray();
+    return collection
+      .find({
+        isFundingComplete: false,
+        fundraisingEndDate: { $gt: new Date() },
+      })
+      .sort({ currentFunding: -1 })
+      .limit(limit)
+      .toArray();
   }
 
   // Method baru untuk semua proyek (aktif + selesai) dengan sorting
   static async findAllWithSorting(
     search?: string | null,
-    page: number = 1, 
+    page: number = 1,
     limit: number = 10,
-    sortBy: 'endDate' | 'funding' | 'created' | 'name' = 'endDate'
+    sortBy: "endDate" | "funding" | "created" | "name" = "endDate"
   ) {
     const collection = this.getCollection();
     const skip = (page - 1) * limit;
 
     // Base query - TIDAK ada filter status (semua proyek)
-    let baseQuery: any = {};
+    const baseQuery: Filter<Project> = {};
 
     // Add search filter if provided (search by project name)
     if (search && search.trim()) {
@@ -540,17 +562,17 @@ export default class ProjectModel {
     }
 
     // Use aggregation pipeline for advanced sorting
-    const pipeline: any[] = [
+    const pipeline: object[] = [
       {
-        $match: baseQuery
-      }
+        $match: baseQuery,
+      },
     ];
 
     // Add sorting based on sortBy parameter
-    let sortStage: any = {};
-    
-    switch(sortBy) {
-      case 'endDate':
+    let sortStage: Record<string, 1 | -1> = {};
+
+    switch (sortBy) {
+      case "endDate":
         // Sort by fundraising end date (closest first)
         pipeline.push({
           $addFields: {
@@ -561,31 +583,31 @@ export default class ProjectModel {
                 else: {
                   $dateFromString: {
                     dateString: "2099-12-31",
-                    onError: new Date("2099-12-31")
-                  }
-                }
-              }
-            }
-          }
+                    onError: new Date("2099-12-31"),
+                  },
+                },
+              },
+            },
+          },
         });
         sortStage = { sortDate: 1 }; // Ascending (closest first)
         break;
-        
-      case 'funding':
+
+      case "funding":
         // Sort by current funding amount (highest first)
         sortStage = { currentFunding: -1 };
         break;
-        
-      case 'created':
+
+      case "created":
         // Sort by creation date (newest first)
         sortStage = { createdAt: -1 };
         break;
-        
-      case 'name':
+
+      case "name":
         // Sort by project name (alphabetical)
         sortStage = { name: 1 };
         break;
-        
+
       default:
         // Default to end date sorting
         pipeline.push({
@@ -597,12 +619,12 @@ export default class ProjectModel {
                 else: {
                   $dateFromString: {
                     dateString: "2099-12-31",
-                    onError: new Date("2099-12-31")
-                  }
-                }
-              }
-            }
-          }
+                    onError: new Date("2099-12-31"),
+                  },
+                },
+              },
+            },
+          },
         });
         sortStage = { sortDate: 1 };
         break;
@@ -616,11 +638,11 @@ export default class ProjectModel {
     pipeline.push({ $limit: limit });
 
     // Remove helper fields from output if they exist
-    if (sortBy === 'endDate') {
+    if (sortBy === "endDate") {
       pipeline.push({
         $project: {
-          sortDate: 0
-        }
+          sortDate: 0,
+        },
       });
     }
 

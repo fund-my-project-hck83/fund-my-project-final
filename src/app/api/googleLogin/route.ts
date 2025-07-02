@@ -20,10 +20,10 @@ export async function GET(request: NextRequest) {
                   if (window.opener) {
                      window.opener.postMessage({ 
                         type: 'GOOGLE_LOGIN_CANCELLED' 
-                     }, 'http://localhost:3000');
+                     }, '${process.env.NEXT_PUBLIC_BASE_URL}');
                      window.close();
                   } else {
-                     window.location.href = 'http://localhost:3000/login';
+                     window.location.href = '${process.env.NEXT_PUBLIC_BASE_URL}/login';
                   }
                </script>
                <p>Login cancelled. This window should close automatically.</p>
@@ -47,10 +47,10 @@ export async function GET(request: NextRequest) {
                      window.opener.postMessage({ 
                         type: 'GOOGLE_LOGIN_ERROR',
                         error: 'No authorization code received'
-                     }, 'http://localhost:3000');
+                     }, '${process.env.NEXT_PUBLIC_BASE_URL}');
                      window.close();
                   } else {
-                     window.location.href = 'http://localhost:3000/login?error=no_code';
+                     window.location.href = '${process.env.NEXT_PUBLIC_BASE_URL}/login?error=no_code';
                   }
                </script>
                <p>Login error. This window should close automatically.</p>
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
             client_secret: process.env.GOOGLE_CLIENT_SECRET!,
             code,
             grant_type: 'authorization_code',
-            redirect_uri: 'http://localhost:3000/api/googleLogin',
+            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL}/api/googleLogin`,
          }),
       });
 
@@ -93,10 +93,10 @@ export async function GET(request: NextRequest) {
                      window.opener.postMessage({ 
                         type: 'GOOGLE_LOGIN_ERROR',
                         error: 'Token exchange failed'
-                     }, 'http://localhost:3000');
+                     }, '${process.env.NEXT_PUBLIC_BASE_URL}');
                      window.close();
                   } else {
-                     window.location.href = 'http://localhost:3000/login?error=token_failed';
+                     window.location.href = '${process.env.NEXT_PUBLIC_BASE_URL}/login?error=token_failed';
                   }
                </script>
                <p>Login error. This window should close automatically.</p>
@@ -131,10 +131,10 @@ export async function GET(request: NextRequest) {
                      window.opener.postMessage({ 
                         type: 'GOOGLE_LOGIN_ERROR',
                         error: 'Failed to get user information'
-                     }, 'http://localhost:3000');
+                     }, '${process.env.NEXT_PUBLIC_BASE_URL}');
                      window.close();
                   } else {
-                     window.location.href = 'http://localhost:3000/login?error=user_info_failed';
+                     window.location.href = '${process.env.NEXT_PUBLIC_BASE_URL}/login?error=user_info_failed';
                   }
                </script>
                <p>Login error. This window should close automatically.</p>
@@ -197,7 +197,7 @@ export async function GET(request: NextRequest) {
                      window.opener.postMessage({ 
                         type: 'GOOGLE_LOGIN_SUCCESS', 
                         token: '${jwtToken}' 
-                     }, 'http://localhost:3000');
+                     }, '${process.env.NEXT_PUBLIC_BASE_URL}');
                      
                      setTimeout(() => {
                         console.log('Closing popup window');
@@ -207,7 +207,7 @@ export async function GET(request: NextRequest) {
                      setTimeout(sendMessage, 500);
                   } else {
                      console.log('Failed to communicate with parent, redirecting...');
-                     window.location.href = 'http://localhost:3000/login?success=true&token=${jwtToken}';
+                     window.location.href = '${process.env.NEXT_PUBLIC_BASE_URL}/login?success=true&token=${jwtToken}';
                   }
                }
                
@@ -237,10 +237,10 @@ export async function GET(request: NextRequest) {
                   window.opener.postMessage({ 
                      type: 'GOOGLE_LOGIN_ERROR',
                      error: 'Server error occurred'
-                  }, 'http://localhost:3000');
+                  }, '${process.env.NEXT_PUBLIC_BASE_URL}');
                   window.close();
                } else {
-                  window.location.href = 'http://localhost:3000/login?error=server_error';
+                  window.location.href = '${process.env.NEXT_PUBLIC_BASE_URL}/login?error=server_error';
                }
             </script>
             <p>Login error. This window should close automatically.</p>

@@ -12,10 +12,10 @@ import {
 
 export async function GET(
   request: NextRequest,
-  context: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = await context.params;
+    const { slug } = await params;
 
     // console.log(request, "ini yang baruuuuuuuu")
     
