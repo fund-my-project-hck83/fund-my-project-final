@@ -3,22 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { pusherServer } from "@/lib/pusher";
 
-// Utility function to get user from header
-const getUserFromHeader = async (request: NextRequest) => {
-  try {
-    const userName = request.headers.get("x-user-username");
-    const userId = request.headers.get("x-user-id");
-
-    return {
-      userName: userName || null,
-      userId: userId || null,
-    };
-  } catch (error) {
-    console.error("Error getting user from header:", error);
-    return { userName: null, userId: null };
-  }
-};
-
 // Utility function to validate project exists
 const validateProject = async (slug: string) => {
   const db = getDb();
@@ -38,22 +22,22 @@ export async function GET(
 ) {
   try {
     const { slug, messageId } = await context.params;
-    
+
     // Validate project exists
     const project = await validateProject(slug);
-    
+
     const db = getDb();
-    
+
     // Get specific message
     const message = await db.collection("chats").findOne({
       _id: new ObjectId(messageId),
       projectId: project._id,
     });
-    
+
     if (!message) {
       return NextResponse.json({ error: "Message not found" }, { status: 404 });
     }
-    
+
     return NextResponse.json({
       _id: message._id.toString(),
       projectId: message.projectId.toString(),
@@ -72,6 +56,23 @@ export async function GET(
   }
 }
 
+// Utility function to get user from API
+const getUserFromApi = async (request: NextRequest) => {
+  try {
+    const userResponse = await fetch(`${request.nextUrl.origin}/api/user`, {
+      headers: request.headers
+    });
+    const userData = await userResponse.json();
+    return {
+      userName: userData.user?.username || null,
+      userId: userData.user?.userId || null,
+    };
+  } catch (error) {
+    console.error("Error getting user from API:", error);
+    return { userName: null, userId: null };
+  }
+};
+
 // DELETE - Delete specific message (owner only)
 export async function DELETE(
   request: NextRequest,
@@ -80,9 +81,8 @@ export async function DELETE(
   try {
     const { slug, messageId } = await context.params;
     
-    // Get user from header for verification
-    const { userName: headerUserName, userId: headerUserId } =
-      await getUserFromHeader(request);
+    // Get user from API for verification
+    const { userName: headerUserName, userId: headerUserId } = await getUserFromApi(request);
     
     // Verify user is authenticated
     if (!headerUserName) {
@@ -96,7 +96,7 @@ export async function DELETE(
     const project = await validateProject(slug);
     
     // Check if user is project owner
-    if (project.userId.toString() !== headerUserId) {
+    if (project.ownerId.toString() !== headerUserId) {
       return NextResponse.json(
         { error: "Only project owner can delete messages" },
         { status: 403 }
