@@ -19,7 +19,6 @@ export default function ProjectChat({
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
   const [currentUser, setCurrentUser] = useState<{
@@ -50,22 +49,19 @@ export default function ProjectChat({
     initUser();
   }, []);
 
-  const scrollToBottom = useCallback(() => {
-    if (shouldAutoScroll) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Improved scroll to bottom function
+  const scrollToBottom = useCallback((force = false) => {
+    if (!messagesEndRef.current) return;
+
+    // Only scroll if it's forced (user sending message) or if it's a new message from others
+    if (force) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({
+          behavior: "smooth",
+        });
+      }, 100);
     }
-  }, [shouldAutoScroll]);
-
-  // Check if user is at bottom of chat
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
-    setShouldAutoScroll(isAtBottom);
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, shouldAutoScroll, scrollToBottom]);
+  }, []);
 
   // Fetch messages only if user is authenticated
   const fetchMessages = useCallback(async () => {
@@ -76,6 +72,7 @@ export default function ProjectChat({
       if (response.ok) {
         const data = await response.json();
         setMessages(data.messages || []);
+        // Don't auto-scroll on initial load
       }
     } catch (error) {
       console.error("Failed to fetch messages:", error);
@@ -99,6 +96,7 @@ export default function ProjectChat({
         }
         return [...prev, newMessage];
       });
+      // Don't auto-scroll for new messages from others
     });
 
     return () => {
@@ -129,7 +127,7 @@ export default function ProjectChat({
       if (response.ok) {
         setNewMessage("");
         // Auto-scroll when user sends a message
-        setShouldAutoScroll(true);
+        scrollToBottom(true);
       }
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -210,10 +208,7 @@ export default function ProjectChat({
         </div>
 
         {/* Messages */}
-        <div
-          className="h-96 overflow-y-auto p-6 space-y-4"
-          onScroll={handleScroll}
-        >
+        <div className="h-96 overflow-y-auto p-6 space-y-4">
           {messages.length === 0 ? (
             <div className="text-center py-8">
               <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -310,10 +305,7 @@ export default function ProjectChat({
       </div>
 
       {/* Messages */}
-      <div
-        className="h-96 overflow-y-auto p-6 space-y-4"
-        onScroll={handleScroll}
-      >
+      <div className="h-96 overflow-y-auto p-6 space-y-4">
         {messages.length === 0 ? (
           <div className="text-center py-8">
             <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />

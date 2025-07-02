@@ -150,13 +150,9 @@ export interface ILivestream {
   title: string;
   description?: string;
   scheduledAt: Date;
-  startedAt?: Date;
-  endedAt?: Date;
   isLive: boolean;
   viewerCount: number;
-  agoraChannelName: string;
-  agoraToken?: string;
-  recordingUrl?: string;
+  channelName: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -169,20 +165,4 @@ export interface ILivestreamViewer {
   userAvatar?: string;
   joinedAt: Date;
   leftAt?: Date;
-}
-
-export interface ILivestreamResponse {
-  _id: string;
-  projectId: string;
-  title: string;
-  description?: string;
-  scheduledAt: Date;
-  startedAt?: Date;
-  endedAt?: Date;
-  isLive: boolean;
-  viewerCount: number;
-  agoraChannelName: string;
-  recordingUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
 }
