@@ -12,52 +12,71 @@ export default function Navbar() {
    const [isLoading, setIsLoading] = useState(true);
    const router = useRouter();
 
-   useEffect(() => {
-      // Check if user is logged in by checking for access_token cookie
-      const checkAuth = async () => {
-         try {
-            // Check if access_token cookie exists
-            const cookies = document.cookie.split(';');
-            const accessTokenCookie = cookies.find(cookie => 
-               cookie.trim().startsWith('access_token=')
-            );
+   const checkAuth = async () => {
+      try {
+         // Check if access_token cookie exists
+         const cookies = document.cookie.split(';');
+         const accessTokenCookie = cookies.find(cookie => 
+            cookie.trim().startsWith('access_token=')
+         );
 
-            if (accessTokenCookie) {
-               setIsLoggedIn(true);
+         if (accessTokenCookie) {
+            setIsLoggedIn(true);
+            
+            // Try to get user data from the token
+            try {
+               const response = await fetch('/api/verify-token', {
+                  credentials: 'include'
+               });
                
-               // Try to get user data from the token
-               try {
-                  const response = await fetch('/api/verify-token', {
-                     credentials: 'include'
-                  });
-                  
-                  if (response.ok) {
-                     const userData = await response.json();
-                     setUser(userData);
-                  } else {
-                     // Token exists but is invalid, user is still logged in but no user data
-                     setUser({ name: "User" });
-                  }
-               } catch (error) {
-                  // If verify fails, still show as logged in but with default user
-                  console.log(error);
-                  
+               if (response.ok) {
+                  const userData = await response.json();
+                  setUser(userData);
+               } else {
                   setUser({ name: "User" });
                }
-            } else {
-               setIsLoggedIn(false);
-               setUser(null);
+            } catch {
+               setUser({ name: "User" });
             }
-         } catch (error) {
-            console.error('Auth check failed:', error);
+         } else {
             setIsLoggedIn(false);
             setUser(null);
-         } finally {
-            setIsLoading(false);
          }
+      } catch (error) {
+         console.error('Auth check failed:', error);
+         setIsLoggedIn(false);
+         setUser(null);
+      } finally {
+         setIsLoading(false);
+      }
+   };
+
+   useEffect(() => {
+      checkAuth();
+
+      // Listen for custom events when login state changes
+      const handleAuthChange = () => {
+         checkAuth();
       };
 
-      checkAuth();
+      // Listen for storage changes (when cookies are set)
+      const handleStorageChange = () => {
+         checkAuth();
+      };
+
+      window.addEventListener('authStateChanged', handleAuthChange);
+      window.addEventListener('storage', handleStorageChange);
+
+      // Poll for cookie changes every 2 seconds as a fallback
+      const interval = setInterval(() => {
+         checkAuth();
+      }, 2000);
+
+      return () => {
+         window.removeEventListener('authStateChanged', handleAuthChange);
+         window.removeEventListener('storage', handleStorageChange);
+         clearInterval(interval);
+      };
    }, []);
 
    const toggleMenu = () => {
@@ -77,18 +96,18 @@ export default function Navbar() {
 
    if (isLoading) {
       return (
-         <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-               <div className="flex justify-between items-center h-16">
+         <nav className="bg-white border border-black rounded-full mx-4 my-4 sticky top-4 z-50">
+            <div className="max-w-6xl mx-auto px-6">
+               <div className="flex justify-between items-center h-14">
                   <div className="flex-shrink-0">
                      <Link href="/" className="flex items-center">
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+                        <h1 className="text-xl font-medium text-black">
                            FundMyProject
                         </h1>
                      </Link>
                   </div>
                   <div className="hidden md:flex items-center space-x-4">
-                     <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+                     <div className="animate-pulse bg-gray-200 h-6 w-16 rounded-full"></div>
                   </div>
                </div>
             </div>
@@ -97,49 +116,47 @@ export default function Navbar() {
    }
 
    return (
-      <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
+      <nav className="bg-white border border-black rounded-full mx-4 my-4 sticky top-4 z-50">
+         <div className="max-w-6xl mx-auto px-6">
+            <div className="flex justify-between items-center h-14">
                {/* Logo */}
                <div className="flex-shrink-0">
                   <Link href="/" className="flex items-center">
-                     <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+                     <h1 className="text-xl font-medium text-black">
                         FundMyProject
                      </h1>
                   </Link>
                </div>
 
                {/* Desktop Navigation */}
-               <div className="hidden md:block">
-                  <div className="ml-10 flex items-baseline space-x-8">
-                     <Link
-                        href="/projects"
-                        className="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                     >
-                        Explore Projects
-                     </Link>
-                     <Link
-                        href="/projects/trending"
-                        className="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                     >
-                        Trending
-                     </Link>
-                     <Link
-                        href="/projects/urgent"
-                        className="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                     >
-                        Urgent
-                     </Link>
-                  </div>
+               <div className="hidden md:flex items-center space-x-1">
+                  <Link
+                     href="/projects"
+                     className="text-gray-700 hover:text-black px-4 py-2 text-sm font-normal transition-colors"
+                  >
+                     Projects
+                  </Link>
+                  <Link
+                     href="/projects/trending"
+                     className="text-gray-700 hover:text-black px-4 py-2 text-sm font-normal transition-colors"
+                  >
+                     Trending
+                  </Link>
+                  <Link
+                     href="/projects/urgent"
+                     className="text-gray-700 hover:text-black px-4 py-2 text-sm font-normal transition-colors"
+                  >
+                     Urgent
+                  </Link>
                </div>
 
                {/* Search Box */}
-               <div className="hidden md:flex flex-1 max-w-lg mx-8">
+               <div className="hidden md:flex flex-1 max-w-sm mx-8">
                   <div className="relative w-full">
                      <input
                         type="text"
-                        placeholder="Search projects..."
-                        className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="Search..."
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:border-black bg-gray-50"
                         onKeyPress={(e) => {
                            if (e.key === 'Enter') {
                               const query = (e.target as HTMLInputElement).value.trim();
@@ -149,27 +166,22 @@ export default function Navbar() {
                            }
                         }}
                      />
-                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                     </div>
                   </div>
                </div>
 
                {/* Desktop Auth Buttons */}
-               <div className="hidden md:flex items-center space-x-4">
+               <div className="hidden md:flex items-center space-x-3">
                   {!isLoggedIn ? (
                      <>
                         <Link
                            href="/login"
-                           className="text-gray-700 hover:text-emerald-600 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                           className="text-gray-700 hover:text-black px-4 py-2 text-sm font-normal transition-colors"
                         >
                            Sign In
                         </Link>
                         <Link
                            href="/register"
-                           className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                           className="bg-white border border-black text-black hover:bg-gray-50 px-4 py-2 rounded-full text-sm font-normal transition-colors"
                         >
                            Sign Up
                         </Link>
@@ -178,41 +190,24 @@ export default function Navbar() {
                      <>
                         <Link
                            href="/create-project"
-                           className="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                           className="bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-full text-sm font-normal transition-colors"
                         >
                            Create Project
                         </Link>
-                        <div className="relative group">
-                           <button className="flex items-center space-x-2 text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                              <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                                 <span className="text-emerald-600 font-semibold">
-                                    {user?.name?.[0]?.toUpperCase() || "U"}
-                                 </span>
-                              </div>
-                              <span>{user?.name || "User"}</span>
-                              <svg
-                                 className="w-4 h-4"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 viewBox="0 0 24 24"
-                              >
-                                 <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 9l-7 7-7-7"
-                                 />
-                              </svg>
-                           </button>
-                           <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                              <button
-                                 onClick={handleSignOut}
-                                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                              >
-                                 Sign Out
-                              </button>
+                        <div className="flex items-center space-x-2 text-gray-700 px-3 py-2 text-sm font-normal">
+                           <div className="w-6 h-6 bg-gray-100 border border-gray-300 rounded-full flex items-center justify-center">
+                              <span className="text-black text-xs font-medium">
+                                 {user?.name?.[0]?.toUpperCase() || "U"}
+                              </span>
                            </div>
+                           <span>{user?.name || "User"}</span>
                         </div>
+                        <button
+                           onClick={handleSignOut}
+                           className="text-red-600 hover:text-red-700 px-4 py-2 text-sm font-normal transition-colors"
+                        >
+                           Sign Out
+                        </button>
                      </>
                   )}
                </div>
@@ -221,11 +216,11 @@ export default function Navbar() {
                <div className="md:hidden">
                   <button
                      onClick={toggleMenu}
-                     className="text-gray-700 hover:text-emerald-600 p-2 rounded-md transition-colors"
+                     className="text-gray-700 hover:text-black p-2 transition-colors"
                      aria-label="Toggle menu"
                   >
                      <svg
-                        className="w-6 h-6"
+                        className="w-5 h-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -252,25 +247,25 @@ export default function Navbar() {
 
             {/* Mobile menu */}
             {isMenuOpen && (
-               <div className="md:hidden">
-                  <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">
+               <div className="md:hidden border-t border-gray-200 mt-2">
+                  <div className="px-4 py-3 space-y-2">
                      <Link
                         href="/projects"
-                        className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
+                        className="text-gray-700 hover:text-black block px-3 py-2 text-sm font-normal"
                         onClick={() => setIsMenuOpen(false)}
                      >
-                        Explore Projects
+                        Projects
                      </Link>
                      <Link
                         href="/projects/trending"
-                        className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
+                        className="text-gray-700 hover:text-black block px-3 py-2 text-sm font-normal"
                         onClick={() => setIsMenuOpen(false)}
                      >
                         Trending
                      </Link>
                      <Link
                         href="/projects/urgent"
-                        className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
+                        className="text-gray-700 hover:text-black block px-3 py-2 text-sm font-normal"
                         onClick={() => setIsMenuOpen(false)}
                      >
                         Urgent
@@ -278,42 +273,35 @@ export default function Navbar() {
 
                      {/* Mobile Search */}
                      <div className="px-3 py-2">
-                        <div className="relative">
-                           <input
-                              type="text"
-                              placeholder="Search projects..."
-                              className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                              onKeyPress={(e) => {
-                                 if (e.key === 'Enter') {
-                                    const query = (e.target as HTMLInputElement).value.trim();
-                                    if (query) {
-                                       window.location.href = `/projects?search=${encodeURIComponent(query)}`;
-                                       setIsMenuOpen(false);
-                                    }
+                        <input
+                           type="text"
+                           placeholder="Search..."
+                           className="w-full px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:border-black bg-gray-50"
+                           onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                 const query = (e.target as HTMLInputElement).value.trim();
+                                 if (query) {
+                                    window.location.href = `/projects?search=${encodeURIComponent(query)}`;
+                                    setIsMenuOpen(false);
                                  }
-                              }}
-                           />
-                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                              </svg>
-                           </div>
-                        </div>
+                              }
+                           }}
+                        />
                      </div>
 
-                     <div className="border-t border-gray-200 pt-4">
+                     <div className="border-t border-gray-200 pt-3 mt-3">
                         {!isLoggedIn ? (
                            <div className="space-y-2">
                               <Link
                                  href="/login"
-                                 className="w-full text-left text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
+                                 className="w-full text-left text-gray-700 hover:text-black block px-3 py-2 text-sm font-normal"
                                  onClick={() => setIsMenuOpen(false)}
                               >
                                  Sign In
                               </Link>
                               <Link
                                  href="/register"
-                                 className="w-full text-left text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
+                                 className="w-full bg-white border border-black text-black hover:bg-gray-50 block px-3 py-2 rounded-full text-sm font-normal transition-colors text-center"
                                  onClick={() => setIsMenuOpen(false)}
                               >
                                  Sign Up
@@ -322,28 +310,28 @@ export default function Navbar() {
                         ) : (
                            <div className="space-y-2">
                               <div className="flex items-center space-x-3 px-3 py-2">
-                                 <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                                    <span className="text-emerald-600 font-semibold">
+                                 <div className="w-6 h-6 bg-gray-100 border border-gray-300 rounded-full flex items-center justify-center">
+                                    <span className="text-black text-xs font-medium">
                                        {user?.name?.[0]?.toUpperCase() || "U"}
                                     </span>
                                  </div>
-                                 <span className="text-gray-700 font-medium">
+                                 <span className="text-gray-700 font-normal text-sm">
                                     {user?.name || "User"}
                                  </span>
                               </div>
                               <Link
                                  href="/create-project"
                                  onClick={() => setIsMenuOpen(false)}
-                                 className="w-full bg-emerald-600 text-white hover:bg-emerald-700 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+                                 className="w-full bg-black text-white hover:bg-gray-800 block px-3 py-2 rounded-full text-sm font-normal transition-colors text-center"
                               >
-                                 Create Project
+                                 Create project
                               </Link>
                               <button
                                  onClick={() => {
                                     handleSignOut();
                                     setIsMenuOpen(false);
                                  }}
-                                 className="w-full text-left text-red-600 hover:text-red-700 block px-3 py-2 rounded-md text-base font-medium"
+                                 className="w-full text-left text-red-600 hover:text-red-700 block px-3 py-2 text-sm font-normal"
                               >
                                  Sign Out
                               </button>
@@ -357,3 +345,363 @@ export default function Navbar() {
       </nav>
    );
 }
+
+// "use client";
+
+// import { useState, useEffect } from "react";
+// import Link from "next/link";
+// import { useRouter } from "next/navigation";
+// import { deleteCookie } from "@/app/login/action";
+
+// export default function Navbar() {
+//    const [isMenuOpen, setIsMenuOpen] = useState(false);
+//    const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+//    const [isLoggedIn, setIsLoggedIn] = useState(false);
+//    const [isLoading, setIsLoading] = useState(true);
+//    const router = useRouter();
+
+//    useEffect(() => {
+//       // Check if user is logged in by checking for access_token cookie
+//       const checkAuth = async () => {
+//          try {
+//             // Check if access_token cookie exists
+//             const cookies = document.cookie.split(';');
+//             const accessTokenCookie = cookies.find(cookie => 
+//                cookie.trim().startsWith('access_token=')
+//             );
+
+//             if (accessTokenCookie) {
+//                setIsLoggedIn(true);
+               
+//                // Try to get user data from the token
+//                try {
+//                   const response = await fetch('/api/verify-token', {
+//                      credentials: 'include'
+//                   });
+                  
+//                   if (response.ok) {
+//                      const userData = await response.json();
+//                      setUser(userData);
+//                   } else {
+//                      // Token exists but is invalid, user is still logged in but no user data
+//                      setUser({ name: "User" });
+//                   }
+//                } catch (error) {
+//                   // If verify fails, still show as logged in but with default user
+//                   console.log(error);
+                  
+//                   setUser({ name: "User" });
+//                }
+//             } else {
+//                setIsLoggedIn(false);
+//                setUser(null);
+//             }
+//          } catch (error) {
+//             console.error('Auth check failed:', error);
+//             setIsLoggedIn(false);
+//             setUser(null);
+//          } finally {
+//             setIsLoading(false);
+//          }
+//       };
+
+//       checkAuth();
+//    }, []);
+
+//    const toggleMenu = () => {
+//       setIsMenuOpen(!isMenuOpen);
+//    };
+
+//    const handleSignOut = async () => {
+//       try {
+//          await deleteCookie("access_token");
+//          setIsLoggedIn(false);
+//          setUser(null);
+//          router.push("/");
+//       } catch (error) {
+//          console.error('Logout failed:', error);
+//       }
+//    };
+
+//    if (isLoading) {
+//       return (
+//          <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
+//             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+//                <div className="flex justify-between items-center h-16">
+//                   <div className="flex-shrink-0">
+//                      <Link href="/" className="flex items-center">
+//                         <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+//                            FundMyProject
+//                         </h1>
+//                      </Link>
+//                   </div>
+//                   <div className="hidden md:flex items-center space-x-4">
+//                      <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+//                   </div>
+//                </div>
+//             </div>
+//          </nav>
+//       );
+//    }
+
+//    return (
+//       <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
+//          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+//             <div className="flex justify-between items-center h-16">
+//                {/* Logo */}
+//                <div className="flex-shrink-0">
+//                   <Link href="/" className="flex items-center">
+//                      <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
+//                         FundMyProject
+//                      </h1>
+//                   </Link>
+//                </div>
+
+//                {/* Desktop Navigation */}
+//                <div className="hidden md:block">
+//                   <div className="ml-10 flex items-baseline space-x-8">
+//                      <Link
+//                         href="/projects"
+//                         className="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+//                      >
+//                         Explore Projects
+//                      </Link>
+//                      <Link
+//                         href="/projects/trending"
+//                         className="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+//                      >
+//                         Trending
+//                      </Link>
+//                      <Link
+//                         href="/projects/urgent"
+//                         className="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+//                      >
+//                         Urgent
+//                      </Link>
+//                   </div>
+//                </div>
+
+//                {/* Search Box */}
+//                <div className="hidden md:flex flex-1 max-w-lg mx-8">
+//                   <div className="relative w-full">
+//                      <input
+//                         type="text"
+//                         placeholder="Search projects..."
+//                         className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+//                         onKeyPress={(e) => {
+//                            if (e.key === 'Enter') {
+//                               const query = (e.target as HTMLInputElement).value.trim();
+//                               if (query) {
+//                                  window.location.href = `/projects?search=${encodeURIComponent(query)}`;
+//                               }
+//                            }
+//                         }}
+//                      />
+//                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+//                         <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+//                         </svg>
+//                      </div>
+//                   </div>
+//                </div>
+
+//                {/* Desktop Auth Buttons */}
+//                <div className="hidden md:flex items-center space-x-4">
+//                   {!isLoggedIn ? (
+//                      <>
+//                         <Link
+//                            href="/login"
+//                            className="text-gray-700 hover:text-emerald-600 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+//                         >
+//                            Sign In
+//                         </Link>
+//                         <Link
+//                            href="/register"
+//                            className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+//                         >
+//                            Sign Up
+//                         </Link>
+//                      </>
+//                   ) : (
+//                      <>
+//                         <Link
+//                            href="/create-project"
+//                            className="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+//                         >
+//                            Create Project
+//                         </Link>
+//                         <div className="relative group">
+//                            <button className="flex items-center space-x-2 text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+//                               <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+//                                  <span className="text-emerald-600 font-semibold">
+//                                     {user?.name?.[0]?.toUpperCase() || "U"}
+//                                  </span>
+//                               </div>
+//                               <span>{user?.name || "User"}</span>
+//                               <svg
+//                                  className="w-4 h-4"
+//                                  fill="none"
+//                                  stroke="currentColor"
+//                                  viewBox="0 0 24 24"
+//                               >
+//                                  <path
+//                                     strokeLinecap="round"
+//                                     strokeLinejoin="round"
+//                                     strokeWidth={2}
+//                                     d="M19 9l-7 7-7-7"
+//                                  />
+//                               </svg>
+//                            </button>
+//                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+//                               <button
+//                                  onClick={handleSignOut}
+//                                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+//                               >
+//                                  Sign Out
+//                               </button>
+//                            </div>
+//                         </div>
+//                      </>
+//                   )}
+//                </div>
+
+//                {/* Mobile menu button */}
+//                <div className="md:hidden">
+//                   <button
+//                      onClick={toggleMenu}
+//                      className="text-gray-700 hover:text-emerald-600 p-2 rounded-md transition-colors"
+//                      aria-label="Toggle menu"
+//                   >
+//                      <svg
+//                         className="w-6 h-6"
+//                         fill="none"
+//                         stroke="currentColor"
+//                         viewBox="0 0 24 24"
+//                      >
+//                         {isMenuOpen ? (
+//                            <path
+//                               strokeLinecap="round"
+//                               strokeLinejoin="round"
+//                               strokeWidth={2}
+//                               d="M6 18L18 6M6 6l12 12"
+//                            />
+//                         ) : (
+//                            <path
+//                               strokeLinecap="round"
+//                               strokeLinejoin="round"
+//                               strokeWidth={2}
+//                               d="M4 6h16M4 12h16M4 18h16"
+//                            />
+//                         )}
+//                      </svg>
+//                   </button>
+//                </div>
+//             </div>
+
+//             {/* Mobile menu */}
+//             {isMenuOpen && (
+//                <div className="md:hidden">
+//                   <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">
+//                      <Link
+//                         href="/projects"
+//                         className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
+//                         onClick={() => setIsMenuOpen(false)}
+//                      >
+//                         Explore Projects
+//                      </Link>
+//                      <Link
+//                         href="/projects/trending"
+//                         className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
+//                         onClick={() => setIsMenuOpen(false)}
+//                      >
+//                         Trending
+//                      </Link>
+//                      <Link
+//                         href="/projects/urgent"
+//                         className="text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
+//                         onClick={() => setIsMenuOpen(false)}
+//                      >
+//                         Urgent
+//                      </Link>
+
+//                      {/* Mobile Search */}
+//                      <div className="px-3 py-2">
+//                         <div className="relative">
+//                            <input
+//                               type="text"
+//                               placeholder="Search projects..."
+//                               className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+//                               onKeyPress={(e) => {
+//                                  if (e.key === 'Enter') {
+//                                     const query = (e.target as HTMLInputElement).value.trim();
+//                                     if (query) {
+//                                        window.location.href = `/projects?search=${encodeURIComponent(query)}`;
+//                                        setIsMenuOpen(false);
+//                                     }
+//                                  }
+//                               }}
+//                            />
+//                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+//                               <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+//                               </svg>
+//                            </div>
+//                         </div>
+//                      </div>
+
+//                      <div className="border-t border-gray-200 pt-4">
+//                         {!isLoggedIn ? (
+//                            <div className="space-y-2">
+//                               <Link
+//                                  href="/login"
+//                                  className="w-full text-left text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
+//                                  onClick={() => setIsMenuOpen(false)}
+//                               >
+//                                  Sign In
+//                               </Link>
+//                               <Link
+//                                  href="/register"
+//                                  className="w-full text-left text-gray-700 hover:text-emerald-600 block px-3 py-2 rounded-md text-base font-medium"
+//                                  onClick={() => setIsMenuOpen(false)}
+//                               >
+//                                  Sign Up
+//                               </Link>
+//                            </div>
+//                         ) : (
+//                            <div className="space-y-2">
+//                               <div className="flex items-center space-x-3 px-3 py-2">
+//                                  <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+//                                     <span className="text-emerald-600 font-semibold">
+//                                        {user?.name?.[0]?.toUpperCase() || "U"}
+//                                     </span>
+//                                  </div>
+//                                  <span className="text-gray-700 font-medium">
+//                                     {user?.name || "User"}
+//                                  </span>
+//                               </div>
+//                               <Link
+//                                  href="/create-project"
+//                                  onClick={() => setIsMenuOpen(false)}
+//                                  className="w-full bg-emerald-600 text-white hover:bg-emerald-700 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+//                               >
+//                                  Create Project
+//                               </Link>
+//                               <button
+//                                  onClick={() => {
+//                                     handleSignOut();
+//                                     setIsMenuOpen(false);
+//                                  }}
+//                                  className="w-full text-left text-red-600 hover:text-red-700 block px-3 py-2 rounded-md text-base font-medium"
+//                               >
+//                                  Sign Out
+//                               </button>
+//                            </div>
+//                         )}
+//                      </div>
+//                   </div>
+//                </div>
+//             )}
+//          </div>
+//       </nav>
+//    );
+// }

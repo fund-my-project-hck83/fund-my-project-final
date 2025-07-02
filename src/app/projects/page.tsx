@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Project } from "@/server/models/ProjectModel";
+import Link from "next/link";
 
 export default function AllProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -253,13 +254,14 @@ export default function AllProjectsPage() {
                           <div className="text-sm text-gray-500">
                             📍 {project.location}
                           </div>
+                          <Link href={`/projects/${project.slug}`}>
                           <button
                             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                               isActiveFundraising(project)
                                 ? "bg-blue-600 text-white hover:bg-blue-700"
                                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
                             }`}
-                            disabled={!isActiveFundraising(project)}
+                            // disabled={!isActiveFundraising(project)}
                           >
                             {(() => {
                               const status = getProjectStatus(project);
@@ -272,6 +274,7 @@ export default function AllProjectsPage() {
                               return "Already Ended";
                             })()}
                           </button>
+                          </Link>
                         </div>
                       </div>
                     </div>

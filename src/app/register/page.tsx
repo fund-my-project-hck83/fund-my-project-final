@@ -59,7 +59,6 @@ export default async function RegisterPage({
                 type="text"
                 name="name"
                 placeholder="Full Name"
-                required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-200 text-black bg-white placeholder-gray-500"
               />
             </div>
@@ -69,7 +68,6 @@ export default async function RegisterPage({
                 type="text"
                 name="username"
                 placeholder="Username"
-                required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-200 text-black bg-white placeholder-gray-500"
               />
             </div>
@@ -79,7 +77,6 @@ export default async function RegisterPage({
                 type="email"
                 name="email"
                 placeholder="Email Address"
-                required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-200 text-black bg-white placeholder-gray-500"
               />
             </div>
@@ -89,7 +86,6 @@ export default async function RegisterPage({
                 type="password"
                 name="password"
                 placeholder="Password"
-                required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-200 text-black bg-white placeholder-gray-500"
               />
             </div>

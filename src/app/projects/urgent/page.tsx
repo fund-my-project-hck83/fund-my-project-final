@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Project } from '@/server/models/ProjectModel';
+import Link from 'next/link';
 
 export default function UrgentPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -249,9 +250,11 @@ export default function UrgentPage() {
 
                       {/* Action Button */}
                       <div>
+                        <Link href={`/projects/${project.slug}`}>
                         <button className="w-full bg-emerald-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-emerald-700 transition-colors">
                           Donate Now
                         </button>
+                        </Link>
                       </div>
                     </div>
                   </div>
