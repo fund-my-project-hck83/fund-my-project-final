@@ -29,7 +29,7 @@ export default function HeroSection() {
           </h1>
           
           <p className="text-xl sm:text-2xl text-gray-600 mb-10 max-w-4xl mx-auto leading-relaxed">
-            Di Fund My Project, kami memberikan support pada inovator untuk mewujudkan inspirasi yang memberikan dampak. 
+            Di Fund My Project, kami memberikan support pada inovator untuk mewujudkan ide yang memberikan impact.
           </p>
 
           {/* CTA Buttons */}
