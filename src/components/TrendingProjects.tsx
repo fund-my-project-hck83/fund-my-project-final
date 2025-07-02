@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { Project } from "@/server/models/ProjectModel";
-import Link from "next/link";
+import { Project } from '@/server/models/ProjectModel';
+import Link from 'next/link';
 
 interface TrendingProjectsProps {
   projects: Project[];
@@ -9,9 +9,9 @@ interface TrendingProjectsProps {
 
 export default function TrendingProjects({ projects }: TrendingProjectsProps) {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
@@ -21,7 +21,7 @@ export default function TrendingProjects({ projects }: TrendingProjectsProps) {
     return Math.min(Math.round((current / goal) * 100), 100);
   };
 
-  const trendingProjects = projects;
+  const trendingProjects = projects
 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
@@ -40,13 +40,13 @@ export default function TrendingProjects({ projects }: TrendingProjectsProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {trendingProjects.map((project) => {
                 const fundingPercentage = calculateFundingPercentage(
-                  project.currentFunding,
+                  project.currentFunding, 
                   project.fundingGoal
                 );
 
                 return (
-                  <div
-                    key={project._id}
+                  <div 
+                    key={project._id} 
                     className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-colors"
                   >
                     {/* Project Image */}
@@ -62,7 +62,7 @@ export default function TrendingProjects({ projects }: TrendingProjectsProps) {
                           📷
                         </div>
                       )}
-
+                      
                       {/* Status Badge */}
                       {project.isLive && (
                         <div className="absolute top-3 left-3">
@@ -71,7 +71,7 @@ export default function TrendingProjects({ projects }: TrendingProjectsProps) {
                           </span>
                         </div>
                       )}
-
+                      
                       {/* Funding Status Badge */}
                       <div className="absolute top-3 right-3">
                         {project.isFundingComplete ? (
@@ -85,24 +85,22 @@ export default function TrendingProjects({ projects }: TrendingProjectsProps) {
                         )}
                       </div>
                     </div>
-
+                    
                     {/* Project Content */}
                     <div className="p-6">
                       <h3 className="text-lg font-medium text-black mb-3 line-clamp-1">
-                        {project.name}
-                      </h3>
+  {project.name}
+</h3>
                       <p className="text-gray-600 mb-4 line-clamp-3 text-sm font-normal">
                         {project.description}
                       </p>
-
+                      
                       {/* Progress Section */}
                       <div className="mb-4">
                         <div className="w-full bg-gray-200 rounded-full h-1 mb-3">
-                          <div
+                          <div 
                             className="bg-black h-full rounded-full"
-                            style={{
-                              width: `${Math.min(fundingPercentage, 100)}%`,
-                            }}
+                            style={{ width: `${Math.min(fundingPercentage, 100)}%` }}
                           ></div>
                         </div>
                         <div className="flex justify-between items-center">
@@ -150,8 +148,7 @@ export default function TrendingProjects({ projects }: TrendingProjectsProps) {
               No trending projects yet
             </h3>
             <p className="text-gray-600 mb-8 max-w-md mx-auto font-normal">
-              Be the first to start your inspiring project and get support from
-              the community
+              Be the first to start your inspiring project and get support from the community
             </p>
             <Link href="/create-project">
               <button className="bg-black text-white px-8 py-3 rounded-full font-normal hover:bg-gray-800 transition-colors">

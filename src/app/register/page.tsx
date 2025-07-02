@@ -1,3 +1,4 @@
+import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -39,87 +40,92 @@ export default async function RegisterPage({
     redirect("/login");
   };
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white rounded-xl shadow-2xl p-8 border border-gray-200">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-black mb-2">Create Account</h1>
-          <p className="text-gray-600 text-sm">Join us today and get started</p>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
-        <form action={handleRegister} className="space-y-6">
-          <div className="space-y-4">
-            <div>
-              <input
-                type="text"
-                name="name"
-                placeholder="Full Name"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-200 text-black bg-white placeholder-gray-500"
-              />
-            </div>
-
-            <div>
-              <input
-                type="text"
-                name="username"
-                placeholder="Username"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-200 text-black bg-white placeholder-gray-500"
-              />
-            </div>
-
-            <div>
-              <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-200 text-black bg-white placeholder-gray-500"
-              />
-            </div>
-
-            <div>
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-200 text-black bg-white placeholder-gray-500"
-              />
-            </div>
-
-            <div>
-              <input
-                type="text"
-                name="profilePicture"
-                placeholder="Profile Picture URL (optional)"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-200 text-black bg-white placeholder-gray-500"
-              />
-            </div>
+   <>
+   <Navbar/>
+    <div className="bg-white pt-24 pb-24 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+        <div className="max-w-md w-full space-y-8 bg-white border border-black rounded-lg p-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-medium text-black mb-2">
+              Create Account
+            </h1>
+            <p className="text-gray-600 text-sm font-normal">Join us today and get started</p>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-black text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Create Account
-          </button>
-        </form>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-normal">
+              {error}
+            </div>
+          )}
 
-        <div className="text-center">
-          <p className="text-gray-600 text-sm">
-            Already have an account?
-            <Link
-              href="/login"
-              className="text-black font-semibold hover:underline transition duration-200"
+          <form action={handleRegister} className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Full Name"
+                  className="w-full px-4 py-3 border border-black rounded-full focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  name="username"
+                  placeholder="Username"
+                  className="w-full px-4 py-3 border border-black rounded-full focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  className="w-full px-4 py-3 border border-black rounded-full focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  className="w-full px-4 py-3 border border-black rounded-full focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  name="profilePicture"
+                  placeholder="Profile Picture URL (optional)"
+                  className="w-full px-4 py-3 border border-black rounded-full focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-black text-white py-3 px-4 rounded-full font-normal hover:bg-gray-800 transition-colors"
             >
-              Sign in here
-            </Link>
-          </p>
+              Create Account
+            </button>
+          </form>
+
+          <div className="text-center">
+            <p className="text-gray-600 text-sm font-normal">
+              Already have an account?{' '}
+              <Link
+                href="/login"
+                className="text-black font-normal hover:underline transition-colors"
+              >
+                Sign in here
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
