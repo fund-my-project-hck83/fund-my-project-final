@@ -1,6 +1,7 @@
 import { ILivestream, IProject } from "@/interfaces/interfaces";
 import { getDb } from "@/server/config/mongodb";
 import { NextRequest, NextResponse } from "next/server";
+import { pusherServer } from "@/lib/pusher";
 
 interface ILivestreamBody {
   title: string;
@@ -8,6 +9,8 @@ interface ILivestreamBody {
   description: string;
   scheduledAt: Date;
 }
+
+
 
 export async function POST(
   request: NextRequest,
@@ -139,17 +142,36 @@ export async function PATCH(
       );
     }
 
-    // Update both livestream and project to set isLive to true
+    // Parse request body to check if this is an early start
+    try {
+      const body = await request.text();
+      if (body) {
+        JSON.parse(body); // Parse to validate JSON, but we don't need the data for now
+      }
+    } catch {
+      // If no body or invalid JSON, continue with default behavior
+      console.log("No request body or invalid JSON, using default start behavior");
+    }
+
+    // Calculate if this is an early start
+    const now = new Date();
+    const scheduledTime = new Date(livestream.scheduledAt);
+    const isEarlyStart = now < scheduledTime;
+
+    // Update livestream with new fields
     await db.collection<ILivestream>("livestreams").updateOne(
       { _id: livestream._id },
       {
         $set: {
           isLive: true,
+          actualStartTime: new Date(),
+          startedEarly: isEarlyStart,
           updatedAt: new Date(),
         },
       }
     );
 
+    // Keep existing project update unchanged
     await db.collection<IProject>("projects").updateOne(
       { _id: project._id },
       {
@@ -160,9 +182,29 @@ export async function PATCH(
       }
     );
 
+    // Trigger Pusher event for real-time updates
+    try {
+      await pusherServer.trigger(
+        `project-${slug}-livestream`,
+        'livestream-started',
+        {
+          isLive: true,
+          actualStartTime: new Date(),
+          startedEarly: isEarlyStart,
+          channelName: livestream.channelName,
+          title: livestream.title
+        }
+      );
+      console.log('Pusher event triggered for livestream start:', slug);
+    } catch (pusherError) {
+      console.error('Pusher error:', pusherError);
+      // Don't fail the request if Pusher fails
+    }
+
     return NextResponse.json({
       success: true,
       message: `Channel: ${livestream.channelName} started successfully`,
+      startedEarly: isEarlyStart,
     });
   } catch (error) {
     console.error("Error starting livestream:", error);
