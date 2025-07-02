@@ -74,13 +74,13 @@ export default function LoginPage() {
    };
 
    return (
-      <div className="min-h-screen bg-black flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-         <div className="max-w-md w-full space-y-8 bg-white rounded-xl shadow-2xl p-8 border border-gray-200">
+      <div className="min-h-screen bg-white flex items-center justify-center py-3 px-4 sm:px-6 lg:px-8">
+         <div className="max-w-md w-full space-y-8 bg-white border border-black rounded-lg p-8">
             <div className="text-center">
-               <h1 className="text-3xl font-bold text-black mb-2">
+               <h1 className="text-3xl font-medium text-black mb-2">
                   Welcome Back
                </h1>
-               <p className="text-gray-600 text-sm">Sign in to your account</p>
+               <p className="text-gray-600 text-sm font-normal">Sign in to your account</p>
             </div>
 
             <div className="space-y-4">
@@ -89,7 +89,7 @@ export default function LoginPage() {
                {/* Divider */}
                <div className="relative flex items-center">
                   <div className="flex-grow border-t border-gray-300"></div>
-                  <span className="flex-shrink mx-4 text-gray-400 text-sm">or</span>
+                  <span className="flex-shrink mx-4 text-gray-400 text-sm font-normal">or</span>
                   <div className="flex-grow border-t border-gray-300"></div>
                </div>
             </div>
@@ -103,7 +103,7 @@ export default function LoginPage() {
                         placeholder="Email Address"
                         value={input.email}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-200 text-black bg-white placeholder-gray-500"
+                        className="w-full px-4 py-3 border border-black rounded-full focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal"
                      />
                   </div>
 
@@ -114,25 +114,25 @@ export default function LoginPage() {
                         placeholder="Password"
                         value={input.password}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-200 text-black bg-white placeholder-gray-500"
+                        className="w-full px-4 py-3 border border-black rounded-full focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal"
                      />
                   </div>
                </div>
                
                <button
                   type="submit"
-                  className="w-full bg-black text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full bg-black text-white py-3 px-4 rounded-full font-normal hover:bg-gray-800 transition-colors"
                >
                   Sign In
                </button>
             </form>
 
             <div className="text-center">
-               <p className="text-gray-600 text-sm">
-                  Don&apos;t have an account?
+               <p className="text-gray-600 text-sm font-normal">
+                  Don&apos;t have an account?{' '}
                   <Link
                      href="/register"
-                     className="text-black font-semibold hover:underline transition duration-200"
+                     className="text-black font-normal hover:underline transition-colors"
                   >
                      Create one here
                   </Link>

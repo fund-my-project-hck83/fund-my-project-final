@@ -51,72 +51,70 @@ export default function Home() {
             )}
 
             {/* Footer */}
-            <footer className="bg-gray-50 py-16 px-4 sm:px-6 lg:px-8 border-t border-gray-200">
+            <footer className="bg-white py-16 px-4 sm:px-6 lg:px-8 border-t border-gray-200">
                <div className="max-w-7xl mx-auto">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                      <div className="md:col-span-2">
-                        <h4 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent mb-4">
+                        <h4 className="text-2xl font-medium text-black mb-4">
                            FundMyProject
                         </h4>
-                        <p className="text-gray-600 mb-6 max-w-md">
-                           Platform crowdfunding terpercaya yang menghubungkan
-                           para inovator dengan donatur untuk mewujudkan impian
-                           bersama.
+                        <p className="text-gray-600 mb-6 max-w-md font-normal">
+                           Trusted crowdfunding platform that connects innovators with donors to make dreams come true together.
                         </p>
                         <div className="flex space-x-4">
                            <a
                               href="#"
-                              className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center hover:bg-emerald-200 transition-colors"
+                              className="w-10 h-10 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors border border-gray-300"
                            >
-                              <span className="text-sm font-bold">f</span>
+                              <span className="text-sm font-normal">f</span>
                            </a>
                            <a
                               href="#"
-                              className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-200 transition-colors"
+                              className="w-10 h-10 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors border border-gray-300"
                            >
-                              <span className="text-sm font-bold">t</span>
+                              <span className="text-sm font-normal">t</span>
                            </a>
                            <a
                               href="#"
-                              className="w-10 h-10 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center hover:bg-pink-200 transition-colors"
+                              className="w-10 h-10 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors border border-gray-300"
                            >
-                              <span className="text-sm font-bold">ig</span>
+                              <span className="text-sm font-normal">ig</span>
                            </a>
                         </div>
                      </div>
                      <div>
-                        <h5 className="font-bold text-gray-900 mb-4">
+                        <h5 className="font-medium text-gray-900 mb-4">
                            Platform
                         </h5>
                         <ul className="space-y-3 text-gray-600">
                            <li>
                               <a
                                  href="#"
-                                 className="hover:text-emerald-600 transition-colors"
+                                 className="hover:text-black transition-colors font-normal"
                               >
-                                 Cara Kerja
+                                 How It Works
                               </a>
                            </li>
                            <li>
                               <a
                                  href="#"
-                                 className="hover:text-emerald-600 transition-colors"
+                                 className="hover:text-black transition-colors font-normal"
                               >
-                                 Biaya Platform
+                                 Platform Fees
                               </a>
                            </li>
                            <li>
                               <a
                                  href="#"
-                                 className="hover:text-emerald-600 transition-colors"
+                                 className="hover:text-black transition-colors font-normal"
                               >
-                                 Tips Sukses
+                                 Success Tips
                               </a>
                            </li>
                            <li>
                               <a
                                  href="#"
-                                 className="hover:text-emerald-600 transition-colors"
+                                 className="hover:text-black transition-colors font-normal"
                               >
                                  Blog
                               </a>
@@ -124,40 +122,40 @@ export default function Home() {
                         </ul>
                      </div>
                      <div>
-                        <h5 className="font-bold text-gray-900 mb-4">
-                           Dukungan
+                        <h5 className="font-medium text-gray-900 mb-4">
+                           Support
                         </h5>
                         <ul className="space-y-3 text-gray-600">
                            <li>
                               <a
                                  href="#"
-                                 className="hover:text-emerald-600 transition-colors"
+                                 className="hover:text-black transition-colors font-normal"
                               >
-                                 Pusat Bantuan
+                                 Help Center
                               </a>
                            </li>
                            <li>
                               <a
                                  href="#"
-                                 className="hover:text-emerald-600 transition-colors"
+                                 className="hover:text-black transition-colors font-normal"
                               >
-                                 Hubungi Kami
+                                 Contact Us
                               </a>
                            </li>
                            <li>
                               <a
                                  href="#"
-                                 className="hover:text-emerald-600 transition-colors"
+                                 className="hover:text-black transition-colors font-normal"
                               >
-                                 Keamanan
+                                 Security
                               </a>
                            </li>
                            <li>
                               <a
                                  href="#"
-                                 className="hover:text-emerald-600 transition-colors"
+                                 className="hover:text-black transition-colors font-normal"
                               >
-                                 Laporan
+                                 Reports
                               </a>
                            </li>
                         </ul>
@@ -166,28 +164,27 @@ export default function Home() {
 
                   <div className="border-t border-gray-200 pt-8">
                      <div className="flex flex-col md:flex-row justify-between items-center">
-                        <p className="text-gray-500 text-sm">
-                           &copy; 2025 FundMyProject. Semua hak cipta
-                           dilindungi.
+                        <p className="text-gray-500 text-sm font-normal">
+                           &copy; 2025 FundMyProject. All rights reserved.
                         </p>
                         <div className="flex space-x-6 mt-4 md:mt-0">
                            <a
                               href="#"
-                              className="text-gray-500 hover:text-emerald-600 text-sm transition-colors"
+                              className="text-gray-500 hover:text-black text-sm transition-colors font-normal"
                            >
-                              Syarat & Ketentuan
+                              Terms & Conditions
                            </a>
                            <a
                               href="#"
-                              className="text-gray-500 hover:text-emerald-600 text-sm transition-colors"
+                              className="text-gray-500 hover:text-black text-sm transition-colors font-normal"
                            >
-                              Kebijakan Privasi
+                              Privacy Policy
                            </a>
                            <a
                               href="#"
-                              className="text-gray-500 hover:text-emerald-600 text-sm transition-colors"
+                              className="text-gray-500 hover:text-black text-sm transition-colors font-normal"
                            >
-                              Cookie
+                              Cookies
                            </a>
                         </div>
                      </div>
