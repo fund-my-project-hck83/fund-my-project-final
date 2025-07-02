@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Project } from '@/server/models/ProjectModel';
+import { IProject } from '@/interfaces/interfaces';
 // import Navbar from '@/components/Navbar';
 
 export default function TrendingProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<IProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [limit, setLimit] = useState(8);
   const [method, setMethod] = useState<'percentage' | 'amount'>('percentage');
@@ -130,7 +130,7 @@ export default function TrendingProjectsPage() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {projects.map((project, index) => (
-                <div key={project._id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                <div key={project._id.toString()} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
                   {/* Project Image */}
                   <div className="relative">
                     {project.projectImage ? (

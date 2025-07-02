@@ -5,6 +5,7 @@ import { Video } from "lucide-react";
 import { ILivestream } from "@/interfaces/interfaces";
 import ScheduleLivestream from "@/components/ScheduleLivestream";
 import AgoraLivestream from "@/components/AgoraLivestream";
+import { pusherClient } from "@/lib/pusher";
 
 interface LivestreamSectionProps {
   projectSlug: string;
@@ -79,6 +80,51 @@ export default function LivestreamSection({
     fetchLivestreamData();
   }, [fetchLivestreamData]);
 
+  // Set up Pusher subscription for real-time livestream updates
+  useEffect(() => {
+    if (!projectSlug) return;
+
+    const channel = pusherClient.subscribe(`project-${projectSlug}-livestream`);
+    
+    channel.bind('livestream-started', (data: {
+      isLive: boolean;
+      actualStartTime: Date;
+      startedEarly: boolean;
+      channelName: string;
+      title: string;
+    }) => {
+      console.log('Livestream started via Pusher:', data);
+      setIsStreaming(true);
+      
+      // Update livestream data if we have it
+      if (livestream) {
+        setLivestream(prev => prev ? {
+          ...prev,
+          isLive: data.isLive,
+          actualStartTime: data.actualStartTime,
+          startedEarly: data.startedEarly
+        } : null);
+      }
+    });
+
+    channel.bind('livestream-stopped', () => {
+      console.log('Livestream stopped via Pusher');
+      setIsStreaming(false);
+      
+      // Update livestream data if we have it
+      if (livestream) {
+        setLivestream(prev => prev ? {
+          ...prev,
+          isLive: false
+        } : null);
+      }
+    });
+
+    return () => {
+      pusherClient.unsubscribe(`project-${projectSlug}-livestream`);
+    };
+  }, [projectSlug, livestream]);
+
   // Countdown timer
   useEffect(() => {
     if (livestream && !isStreaming) {
@@ -101,6 +147,33 @@ export default function LivestreamSection({
 
   const canStartStream = timeUntilStream <= 2 * 60 * 60 * 1000; // 2 hours in ms
   const isStreamTime = timeUntilStream <= 0;
+
+  // Handle early start
+  const handleStartStreamEarly = async () => {
+    if (!isOwner || !canStartStream) return;
+
+    try {
+      const response = await fetch(`/api/livestreams/project/${projectSlug}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ startedEarly: true }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Stream started early:', result);
+        // The Pusher event will handle updating the UI
+      } else {
+        console.error('Failed to start stream early');
+      }
+    } catch (error) {
+      console.error('Error starting stream early:', error);
+    }
+  };
+
+
 
   // Loading state
   if (loading) {
@@ -142,12 +215,17 @@ export default function LivestreamSection({
           </p>
 
           {canStartStream && isOwner && (
-            <button
-              onClick={() => setIsStreaming(true)}
-              className="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Start Stream Now
-            </button>
+            <div className="mt-4">
+              <button
+                onClick={handleStartStreamEarly}
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Start Stream Now
+              </button>
+              <p className="text-xs text-blue-600 mt-2">
+                💡 You can start early and viewers will join immediately
+              </p>
+            </div>
           )}
         </div>
 
@@ -168,6 +246,11 @@ export default function LivestreamSection({
             {livestream.description && (
               <p>
                 <strong>Description:</strong> {livestream.description}
+              </p>
+            )}
+            {canStartStream && (
+              <p className="text-xs text-green-600 mt-2">
+                ⏰ Early start available (within 2 hours of scheduled time)
               </p>
             )}
           </div>
