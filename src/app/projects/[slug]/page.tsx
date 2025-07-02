@@ -29,6 +29,7 @@ import {
   Eye,
 } from "lucide-react";
 import ProjectChat from "@/components/ProjectChat";
+import AgoraLivestream from "@/components/AgoraLivestream";
 
 interface MidtransResult {
   transaction_id: string;
@@ -72,7 +73,9 @@ export default function ProjectDetailPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [donationAmount, setDonationAmount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isOwner] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [expandedInsights, setExpandedInsights] = useState<
     Record<string, boolean>
   >({});
@@ -92,11 +95,46 @@ export default function ProjectDetailPage() {
     }
   }, [params.slug]);
 
+  const checkOwnership = useCallback(async () => {
+    try {
+      const userResponse = await fetch('/api/user');
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        if (userData.user) {
+          setCurrentUser(userData.user);
+          setIsLoggedIn(true);
+          if (project && project.owner) {
+            setIsOwner(userData.user.userId === project.owner.id);
+          }
+        } else {
+          setIsLoggedIn(false);
+          setCurrentUser(null);
+          setIsOwner(false);
+        }
+      } else {
+        setIsLoggedIn(false);
+        setCurrentUser(null);
+        setIsOwner(false);
+      }
+    } catch (error) {
+      console.error('Error checking ownership:', error);
+      setIsLoggedIn(false);
+      setCurrentUser(null);
+      setIsOwner(false);
+    }
+  }, [project]);
+
   useEffect(() => {
     if (params.slug) {
       fetchProject();
     }
   }, [params.slug, fetchProject]);
+
+  useEffect(() => {
+    if (project) {
+      checkOwnership();
+    }
+  }, [project, checkOwnership]);
 
   useEffect(() => {
     const donationSuccess = searchParams.get("donation_success");
@@ -116,9 +154,7 @@ export default function ProjectDetailPage() {
     fetchProject();
   };
 
-  // const handleOwnerToggle = (newIsOwner: boolean) => {
-  //   setIsOwner(newIsOwner);
-  // };
+
 
   const getInsightIcon = (type: string) => {
     const icons = {
@@ -196,9 +232,6 @@ export default function ProjectDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <MidtransScript />
-
-      {/* Owner Toggle Component */}
-      {/* <OwnerToggle onToggle={handleOwnerToggle} /> */}
 
       {/* Modals */}
       <SuccessModal
@@ -292,6 +325,17 @@ export default function ProjectDetailPage() {
 
             {/* Project Chat */}
             <ProjectChat projectSlug={project.slug} isOwner={isOwner} />
+
+            {/* Agora Livestream Component */}
+            {isLoggedIn && (
+              <AgoraLivestream 
+                isHost={isOwner}
+                userId={currentUser?.userId || "anonymous"}
+                userName={currentUser?.name || "Anonymous"}
+                channelName={project.slug}
+                onViewerCountChange={(count) => console.log(`Viewer count: ${count}`)}
+              />
+            )}
 
             {/* Recent Donations */}
             <RecentDonations
