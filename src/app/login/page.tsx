@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import Link from "next/link";
 import AuthButton from "@/components/buttonGoogle";
 import { setCookie } from "./action";
+import Navbar from "@/components/Navbar";
 
 export default function LoginPage() {
    const [input, setInput] = useState<ILogin>({
@@ -74,7 +75,9 @@ export default function LoginPage() {
    };
 
    return (
-      <div className="min-h-screen bg-white flex items-center justify-center py-3 px-4 sm:px-6 lg:px-8">
+      <>
+      <Navbar/>
+      <div className="bg-white pt-24 pb-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
          <div className="max-w-md w-full space-y-8 bg-white border border-black rounded-lg p-8">
             <div className="text-center">
                <h1 className="text-3xl font-medium text-black mb-2">
@@ -140,5 +143,6 @@ export default function LoginPage() {
             </div>
          </div>
       </div>
+      </>
    );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Project } from "@/server/models/ProjectModel";
 import HeroSection from "@/components/HeroSection";
 import TrendingProjects from "@/components/TrendingProjects";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
    const [projects, setProjects] = useState<Project[]>([]);
@@ -30,6 +31,7 @@ export default function Home() {
    return (
       <>
          <div className="min-h-screen bg-white">
+            <Navbar/>
 
             {/* Hero Section */}
             <HeroSection />
