@@ -96,7 +96,7 @@ export default function FormWrapper({
                 </div>
                 {index < totalSteps - 1 && (
                   <div className={`
-                    w-full h-1 mx-4
+                    w-16 h-1 mx-4
                     ${index + 1 < currentStep ? 'bg-black' : 'bg-gray-200'}
                   `} />
                 )}
