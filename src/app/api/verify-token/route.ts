@@ -1,23 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import * as jose from "jose";
 
 export async function GET(request: NextRequest) {
-   try {
-      const token = request.cookies.get('access_token')?.value;
-      
-      if (!token) {
-         return NextResponse.json({ error: 'No token found' }, { status: 401 });
-      }
+  try {
+    const token = request.cookies.get("access_token")?.value;
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
-      
-      return NextResponse.json({
-         _id: decoded._id,
-         email: decoded.email,
-         name: decoded.username
-      });
-      
-   } catch (error) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-   }
+    if (!token) {
+      return NextResponse.json({ error: "No token found" }, { status: 401 });
+    }
+
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const { payload } = await jose.jwtVerify<{
+      _id: string;
+      email: string;
+      username: string;
+    }>(token, secret);
+
+    return NextResponse.json({
+      _id: payload._id,
+      email: payload.email,
+      name: payload.username,
+    });
+  } catch {
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
 }

@@ -31,6 +31,11 @@ import {
 import ProjectChat from "@/components/ProjectChat";
 import AgoraLivestream from "@/components/AgoraLivestream";
 
+interface IApiUserResp {
+  username: string;
+  userId: string;
+}
+
 interface MidtransResult {
   transaction_id: string;
   payment_type: string;
@@ -74,11 +79,12 @@ export default function ProjectDetailPage() {
   const [donationAmount, setDonationAmount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<IApiUserResp | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [expandedInsights, setExpandedInsights] = useState<
     Record<string, boolean>
   >({});
+  console.log(currentUser, "<<<<<<<<<<<<");
 
   const fetchProject = useCallback(async () => {
     try {
@@ -97,7 +103,7 @@ export default function ProjectDetailPage() {
 
   const checkOwnership = useCallback(async () => {
     try {
-      const userResponse = await fetch('/api/user');
+      const userResponse = await fetch("/api/user");
       if (userResponse.ok) {
         const userData = await userResponse.json();
         if (userData.user) {
@@ -117,7 +123,7 @@ export default function ProjectDetailPage() {
         setIsOwner(false);
       }
     } catch (error) {
-      console.error('Error checking ownership:', error);
+      console.error("Error checking ownership:", error);
       setIsLoggedIn(false);
       setCurrentUser(null);
       setIsOwner(false);
@@ -153,8 +159,6 @@ export default function ProjectDetailPage() {
     setDonationAmount(amount);
     fetchProject();
   };
-
-
 
   const getInsightIcon = (type: string) => {
     const icons = {
@@ -327,13 +331,15 @@ export default function ProjectDetailPage() {
             <ProjectChat projectSlug={project.slug} isOwner={isOwner} />
 
             {/* Agora Livestream Component */}
-            {isLoggedIn && (
-              <AgoraLivestream 
+            {isLoggedIn && currentUser && (
+              <AgoraLivestream
                 isHost={isOwner}
-                userId={currentUser?.userId || "anonymous"}
-                userName={currentUser?.name || "Anonymous"}
+                userId={currentUser.userId}
+                userName={currentUser.username}
                 channelName={project.slug}
-                onViewerCountChange={(count) => console.log(`Viewer count: ${count}`)}
+                onViewerCountChange={(count) =>
+                  console.log(`Viewer count: ${count}`)
+                }
               />
             )}
 
