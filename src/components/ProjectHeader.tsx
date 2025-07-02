@@ -16,7 +16,7 @@ export default function ProjectHeader({ name, location, imageUrl }: ProjectHeade
           src={imageUrl || '/placeholder-project.jpg'}
           alt={name}
           fill
-          className="object-cover"
+          className="object-contain"
           priority
         />
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
