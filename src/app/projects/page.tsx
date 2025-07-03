@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Project } from "@/server/models/ProjectModel";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 export default function AllProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -114,6 +115,8 @@ export default function AllProjectsPage() {
   };
 
   return (
+    <>
+    <Navbar/>
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
 
       {/* Page Header */}
@@ -400,5 +403,6 @@ export default function AllProjectsPage() {
         </div>
       </footer>
     </div>
+    </>
   );
 }

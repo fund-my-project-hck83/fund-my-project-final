@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Project } from '@/server/models/ProjectModel';
+import Navbar from '@/components/Navbar';
 
 export default function EndingSoonPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -61,6 +62,8 @@ export default function EndingSoonPage() {
   };
 
   return (
+    <>
+    <Navbar/>
     <div className="min-h-screen bg-gray-50"> 
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
@@ -287,5 +290,6 @@ export default function EndingSoonPage() {
         )}
       </main>
     </div>
+    </>
   );
 }
