@@ -175,44 +175,6 @@ export default function ProjectDetailPage() {
     );
   };
 
-  const getInsightGradient = (type: string): string => {
-    const gradients = {
-      strength: "from-green-500 to-emerald-600",
-      weakness: "from-red-500 to-red-600",
-      opportunities: "from-blue-500 to-blue-600",
-      threat: "from-orange-500 to-orange-600",
-    };
-    return (
-      gradients[type as keyof typeof gradients] || "from-gray-500 to-gray-600"
-    );
-  };
-
-  const getInsightBorder = (type: string): string => {
-    const borders = {
-      strength: "border-green-200 hover:border-green-300",
-      weakness: "border-red-200 hover:border-red-300",
-      opportunities: "border-blue-200 hover:border-blue-300",
-      threat: "border-orange-200 hover:border-orange-300",
-    };
-    return (
-      borders[type as keyof typeof borders] ||
-      "border-gray-200 hover:border-gray-300"
-    );
-  };
-
-  const getBadgeStyle = (type: string): string => {
-    const styles = {
-      strength: "bg-green-100 text-green-800 border-green-200",
-      weakness: "bg-red-100 text-red-800 border-red-200",
-      opportunities: "bg-blue-100 text-blue-800 border-blue-200",
-      threat: "bg-orange-100 text-orange-800 border-orange-200",
-    };
-    return (
-      styles[type as keyof typeof styles] ||
-      "bg-gray-100 text-gray-800 border-gray-200"
-    );
-  };
-
   const toggleInsightExpansion = (key: string) => {
     setExpandedInsights((prev) => ({
       ...prev,
@@ -297,21 +259,21 @@ export default function ProjectDetailPage() {
             )} */}
 
             {/* Project Description */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <div className="bg-white border border-black rounded-lg p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
                   <Heart className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">
+                  <h2 className="text-2xl font-medium text-black">
                     About This Project
                   </h2>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 font-normal">
                     Learn more about this initiative
                   </p>
                 </div>
               </div>
-              <p className="text-gray-700 leading-relaxed text-lg">
+              <p className="text-gray-700 leading-relaxed text-lg font-normal">
                 {project.description}
               </p>
             </div>
@@ -359,19 +321,19 @@ export default function ProjectDetailPage() {
               projectSlug={project.slug}
             />
 
-            {/* AI Insights Section - Added here, after Recent Donations */}
+            {/* AI Insights Section - Updated to match flat design */}
             {project.aiInsights &&
               Object.keys(project.aiInsights).length > 0 && (
-                <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <div className="bg-white border border-black rounded-lg p-8">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
                       <TrendingUp className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-800">
+                      <h2 className="text-2xl font-medium text-black">
                         AI Project Analysis
                       </h2>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 font-normal">
                         Strategic insights powered by artificial intelligence
                       </p>
                     </div>
@@ -390,33 +352,28 @@ export default function ProjectDetailPage() {
                         return (
                           <div
                             key={key}
-                            className={`group relative rounded-xl border-2 transition-all duration-300 hover:shadow-lg ${getInsightBorder(
-                              key
-                            )} bg-gradient-to-br from-white to-gray-50 hover:from-white hover:to-white overflow-hidden`}
+                            className={`border-2 rounded-lg transition-all duration-300 hover:border-gray-800 bg-white ${
+                              key === "strength" 
+                                ? "border-green-500" 
+                                : "border-blue-500"
+                            }`}
                           >
-                            {/* Decorative Background Pattern */}
-                            <div className="absolute top-0 right-0 w-20 h-20 opacity-5 overflow-hidden rounded-xl">
-                              <div
-                                className={`w-full h-full bg-gradient-to-br ${getInsightGradient(
-                                  key
-                                )} transform rotate-12 scale-150`}
-                              ></div>
-                            </div>
-
                             {/* Main Card Content */}
-                            <div className="relative p-6">
+                            <div className="p-6">
                               {/* Header */}
                               <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                   <div
-                                    className={`w-8 h-8 bg-gradient-to-r ${getInsightGradient(
-                                      key
-                                    )} rounded-lg flex items-center justify-center`}
+                                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                      key === "strength" 
+                                        ? "bg-green-500" 
+                                        : "bg-blue-500"
+                                    }`}
                                   >
                                     {getInsightIcon(key)}
                                   </div>
                                   <div>
-                                    <h3 className="text-lg font-bold text-gray-900 capitalize group-hover:text-gray-800 transition-colors">
+                                    <h3 className="text-lg font-medium text-black capitalize">
                                       {key === "opportunities"
                                         ? "Opportunities"
                                         : key.replace(/([A-Z])/g, " $1").trim()}
@@ -424,9 +381,11 @@ export default function ProjectDetailPage() {
                                   </div>
                                 </div>
                                 <span
-                                  className={`px-3 py-1 text-xs font-medium rounded-full border ${getBadgeStyle(
-                                    key
-                                  )} transition-all duration-200`}
+                                  className={`px-3 py-1 text-xs font-normal rounded-full border ${
+                                    key === "strength"
+                                      ? "bg-green-100 text-green-800 border-green-300"
+                                      : "bg-blue-100 text-blue-800 border-blue-300"
+                                  }`}
                                 >
                                   {insight.badge}
                                 </span>
@@ -434,10 +393,10 @@ export default function ProjectDetailPage() {
 
                               {/* Always Visible Content */}
                               <div className="space-y-3">
-                                <h4 className="font-semibold text-gray-800 leading-snug">
+                                <h4 className="font-medium text-black leading-snug">
                                   {insight.title}
                                 </h4>
-                                <p className="text-sm text-gray-600 leading-relaxed">
+                                <p className="text-sm text-gray-600 font-normal leading-relaxed">
                                   {insight.excerpt}
                                 </p>
                               </div>
@@ -450,8 +409,8 @@ export default function ProjectDetailPage() {
                                     : "max-h-0 opacity-0"
                                 }`}
                               >
-                                <div className="pt-3 border-t border-gray-100">
-                                  <p className="text-sm text-gray-500 leading-relaxed">
+                                <div className="pt-3 border-t border-gray-200">
+                                  <p className="text-sm text-gray-500 font-normal leading-relaxed">
                                     {insight.description}
                                   </p>
                                 </div>
@@ -460,10 +419,12 @@ export default function ProjectDetailPage() {
                               {/* Toggle Button */}
                               <button
                                 onClick={() => toggleInsightExpansion(key)}
-                                className={`w-full mt-4 py-2 px-4 rounded-lg border transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium ${
+                                className={`w-full mt-4 py-2 px-4 rounded-full border transition-all duration-200 flex items-center justify-center gap-2 text-sm font-normal ${
                                   isExpanded
-                                    ? `${getBadgeStyle(key)} hover:opacity-80`
-                                    : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                                    ? key === "strength"
+                                      ? "bg-green-100 text-green-800 border-green-300 hover:bg-green-200"
+                                      : "bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200"
+                                    : "border-black text-gray-600 hover:border-gray-800 hover:bg-gray-50"
                                 }`}
                               >
                                 {isExpanded ? (
@@ -479,26 +440,19 @@ export default function ProjectDetailPage() {
                                 )}
                               </button>
                             </div>
-
-                            {/* Hover Effect Border */}
-                            <div
-                              className={`absolute inset-0 rounded-xl bg-gradient-to-r ${getInsightGradient(
-                                key
-                              )} opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none`}
-                            ></div>
                           </div>
                         );
                       })}
                   </div>
 
                   {/* Additional Info */}
-                  <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
-                    <div className="flex items-center gap-2 text-sm text-purple-700">
-                      <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
+                  <div className="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-lg">
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">
                         <span className="text-white text-xs">✨</span>
                       </div>
                       <span className="font-medium">AI-Powered Analysis:</span>
-                      <span>
+                      <span className="font-normal">
                         This assessment highlights the project&apos;s strengths
                         and growth opportunities
                       </span>

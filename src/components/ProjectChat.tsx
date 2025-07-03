@@ -173,10 +173,10 @@ export default function ProjectChat({
   // Show loading state
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+      <div className="bg-white border border-black rounded-lg p-6">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <span className="ml-3 text-gray-600">Loading chat...</span>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
+          <span className="ml-3 text-gray-600 font-normal">Loading chat...</span>
         </div>
       </div>
     );
@@ -185,23 +185,23 @@ export default function ProjectChat({
   // Show view-only message
   if (!currentUser) {
     return (
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
+      <div className="bg-white border border-black rounded-lg">
         {/* Chat Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
               <MessageCircle className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-medium text-black">
                 Project Discussion
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 font-normal">
                 {messages.length} messages • View Only
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
+          <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 border border-gray-300 text-gray-600 rounded-full text-sm font-normal">
             <Lock className="w-4 h-4" />
             View Only
           </div>
@@ -212,33 +212,35 @@ export default function ProjectChat({
           {messages.length === 0 ? (
             <div className="text-center py-8">
               <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">
+              <p className="text-gray-500 font-normal">
                 No messages yet. Be the first to start the conversation!
               </p>
             </div>
           ) : (
             messages.map((message) => (
               <div key={message._id} className="flex gap-3">
-                <Image
-                  src={
-                    message.userAvatar ||
-                    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&crop=1&fit=crop"
-                  }
-                  alt={message.userName}
-                  width={32}
-                  height={32}
-                  className="rounded-full flex-shrink-0"
-                />
+                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-200">
+                  <Image
+                    src={
+                      message.userAvatar ||
+                      "https://ui-avatars.com/api/?name=User&background=random"
+                    }
+                    alt={message.userName}
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-gray-800 text-sm">
+                    <span className="font-medium text-black text-sm">
                       {message.userName}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 font-normal">
                       {formatTime(message.timestamp)}
                     </span>
                   </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">
+                  <p className="text-gray-700 text-sm font-normal leading-relaxed">
                     {message.message}
                   </p>
                 </div>
@@ -249,25 +251,25 @@ export default function ProjectChat({
         </div>
 
         {/* View-Only Message Input */}
-        <div className="p-6 border-t border-gray-100 bg-gray-50">
+        <div className="p-6 border-t border-gray-200 bg-gray-50">
           <div className="flex gap-3">
-            <div className="w-8 h-8 bg-gray-300 rounded-full flex-shrink-0"></div>
+            <div className="w-8 h-8 bg-gray-300 border border-gray-400 rounded-full flex-shrink-0"></div>
             <div className="flex-1 relative">
-              <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-gray-400 cursor-not-allowed">
+              <div className="w-full px-4 py-3 border border-gray-300 rounded-full bg-white text-gray-400 cursor-not-allowed font-normal">
                 Login to join the discussion...
               </div>
             </div>
             <button
               disabled
-              className="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed"
+              className="p-2 bg-gray-300 border border-gray-400 text-gray-500 rounded-full cursor-not-allowed"
             >
               <Send className="w-4 h-4" />
             </button>
           </div>
-          <div className="mt-2 text-center">
+          <div className="mt-4 text-center">
             <a
               href="/login"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-sm font-normal"
             >
               <Lock className="w-4 h-4" />
               Login to Participate
@@ -279,25 +281,25 @@ export default function ProjectChat({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
+    <div className="bg-white border border-black rounded-lg">
       {/* Chat Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-100">
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
             <MessageCircle className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-800">
+            <h2 className="text-xl font-medium text-black">
               Project Discussion
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 font-normal">
               {messages.length} messages •{" "}
               {isOwner ? "Owner Mode" : "Public Mode"}
             </p>
           </div>
         </div>
         {isOwner && (
-          <div className="flex items-center gap-2 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+          <div className="flex items-center gap-2 px-3 py-1 bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-full text-sm font-normal">
             <Crown className="w-4 h-4" />
             Owner
           </div>
@@ -309,29 +311,31 @@ export default function ProjectChat({
         {messages.length === 0 ? (
           <div className="text-center py-8">
             <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">
+            <p className="text-gray-500 font-normal">
               No messages yet. Start the conversation!
             </p>
           </div>
         ) : (
           messages.map((message) => (
             <div key={message._id} className="flex gap-3">
-              <Image
-                src={
-                  message.userAvatar ||
-                  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&crop=1&fit=crop"
-                }
-                alt={message.userName}
-                width={32}
-                height={32}
-                className="rounded-full flex-shrink-0"
-              />
+              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-200">
+                <Image
+                  src={
+                    message.userAvatar ||
+                    "https://ui-avatars.com/api/?name=User&background=random"
+                  }
+                  alt={message.userName}
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-gray-800 text-sm">
+                  <span className="font-medium text-black text-sm">
                     {message.userName}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 font-normal">
                     {formatTime(message.timestamp)}
                   </span>
                   {isOwner && (
@@ -344,7 +348,7 @@ export default function ProjectChat({
                     </button>
                   )}
                 </div>
-                <p className="text-gray-700 text-sm leading-relaxed">
+                <p className="text-gray-700 text-sm font-normal leading-relaxed">
                   {message.message}
                 </p>
               </div>
@@ -355,37 +359,40 @@ export default function ProjectChat({
       </div>
 
       {/* Message Input */}
-      <div className="p-6 border-t border-gray-100">
-        <div className="flex gap-3">
-          <Image
-            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-              currentUser.username || "User"
-            )}&background=random`}
-            alt={currentUser.username || "User"}
-            width={32}
-            height={32}
-            className="rounded-full flex-shrink-0"
-          />
+      <div className="p-6 border-t border-gray-200">
+        <div className="flex gap-3 items-start">
+          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-gray-200 mt-1">
+            <Image
+              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                currentUser.username || "User"
+              )}&background=random`}
+              alt={currentUser.username || "User"}
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+            />
+          </div>
           <div className="flex-1 relative">
             <textarea
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 pr-14 border border-black rounded-full resize-none focus:outline-none focus:border-gray-800 transition-colors font-normal min-h-[44px] flex items-center"
               rows={1}
               disabled={isSending}
+              style={{ paddingTop: '11px', paddingBottom: '11px' }}
             />
             <button
               onClick={sendMessage}
               disabled={!newMessage.trim() || isSending}
-              className="absolute right-2 top-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="absolute right-1 top-1 bottom-1 w-10 h-10 bg-black text-white rounded-full hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >
               <Send className="w-4 h-4" />
             </button>
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-gray-500 font-normal mt-2">
           Press Enter to send, Shift+Enter for new line
         </p>
       </div>
