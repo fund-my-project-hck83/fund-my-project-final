@@ -79,7 +79,7 @@ export default function Navbar() {
       return (
          <nav className="bg-white border border-black rounded-full mx-4 my-4 sticky top-4 z-50">
             <div className="max-w-6xl mx-auto px-6">
-               <div className="flex justify-between items-center h-14">
+               <div className="flex justify-between items-center h-16"> {/* Changed from h-14 to h-16 */}
                   <div className="flex-shrink-0">
                      <Link href="/" className="flex items-center">
                         <h1 className="text-xl font-medium text-black">
@@ -99,7 +99,7 @@ export default function Navbar() {
    return (
       <nav className="bg-white border border-black rounded-full mx-4 my-4 sticky top-4 z-50">
          <div className="max-w-6xl mx-auto px-6">
-            <div className="flex justify-between items-center h-14">
+            <div className="flex justify-between items-center h-16"> {/* Changed from h-14 to h-16 */}
                {/* Logo */}
                <div className="flex-shrink-0">
                   <Link href="/" className="flex items-center">
