@@ -28,7 +28,7 @@ export default function Page1BasicInfo({ formData, updateFormData, errors }: Pag
           className={`w-full px-4 py-3 border rounded-full focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal ${
             errors.name ? 'border-red-500' : 'border-black'
           }`}
-          placeholder="Enter your project name"
+          placeholder="Nama project"
         />
         {errors.name && (
           <p className="mt-2 text-sm text-red-600 font-normal">{errors.name}</p>
@@ -47,7 +47,7 @@ export default function Page1BasicInfo({ formData, updateFormData, errors }: Pag
           className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal resize-none ${
             errors.description ? 'border-red-500' : 'border-black'
           }`}
-          placeholder="Describe your project in detail..."
+          placeholder="Ceritakan project kamu..."
         />
         {errors.description && (
           <p className="mt-2 text-sm text-red-600 font-normal">{errors.description}</p>
@@ -66,7 +66,7 @@ export default function Page1BasicInfo({ formData, updateFormData, errors }: Pag
           className={`w-full px-4 py-3 border rounded-full focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal ${
             errors.location ? 'border-red-500' : 'border-black'
           }`}
-          placeholder="City, Country"
+          placeholder="Kota"
         />
         {errors.location && (
           <p className="mt-2 text-sm text-red-600 font-normal">{errors.location}</p>
@@ -108,22 +108,6 @@ export default function Page1BasicInfo({ formData, updateFormData, errors }: Pag
           {errors.projectEndDate && (
             <p className="mt-2 text-sm text-red-600 font-normal">{errors.projectEndDate}</p>
           )}
-        </div>
-      </div>
-
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <div className="w-5 h-5 text-gray-600">ℹ️</div>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-black">
-              Next Steps
-            </h3>
-            <div className="mt-2 text-sm text-gray-600 font-normal">
-              <p>After this page, you&apos;ll define your project&apos;s impact metrics and add visuals to make your project more compelling to potential donors.</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

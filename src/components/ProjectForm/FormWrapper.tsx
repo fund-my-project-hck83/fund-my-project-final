@@ -58,10 +58,10 @@ const stepTitles = [
 ];
 
 const stepDescriptions = [
-  'Tell us about your project basics',
-  'Define your impact and add visuals',
-  'Set your fundraising goals',
-  'Create proposal and get insights'
+  'Informasi tentang project kamu',
+  'Definisi impact dan penambahan visual',
+  'Tentukan target fundraising',
+  'Buat proposal dan dapatkan insights'
 ];
 
 export default function FormWrapper({
@@ -96,7 +96,7 @@ export default function FormWrapper({
                 </div>
                 {index < totalSteps - 1 && (
                   <div className={`
-                    w-full h-1 mx-4
+                    w-16 h-1 mx-4
                     ${index + 1 < currentStep ? 'bg-black' : 'bg-gray-200'}
                   `} />
                 )}
