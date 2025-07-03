@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { IProject } from '@/interfaces/interfaces';
+import Navbar from '@/components/Navbar';
 // import Navbar from '@/components/Navbar';
 
 export default function TrendingProjectsPage() {
@@ -49,6 +50,8 @@ export default function TrendingProjectsPage() {
   };
 
   return (
+    <>
+    <Navbar/>
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
@@ -226,5 +229,6 @@ export default function TrendingProjectsPage() {
         )}
       </main>
     </div>
+    </>
   );
 }
