@@ -138,7 +138,7 @@ export default function Page4Proposal({ formData, updateFormData, errors }: Page
               <div className="text-center">
                 <div className="text-4xl mb-4">📄</div>
                 <h4 className="text-lg font-medium text-black">Upload Proposal</h4>
-                <p className="text-gray-600 font-normal">Upload your 3-page proposal document</p>
+                <p className="text-gray-600 font-normal">Attach link drive ke proposal</p>
               </div>
             </button>
 
@@ -153,7 +153,7 @@ export default function Page4Proposal({ formData, updateFormData, errors }: Page
               <div className="text-center">
                 <div className="text-4xl mb-4">🤖</div>
                 <h4 className="text-lg font-medium text-black">AI Generated</h4>
-                <p className="text-gray-600 font-normal">Generate proposal using AI</p>
+                <p className="text-gray-600 font-normal">Generate proposal dengan AI</p>
               </div>
             </button>
           </div>
@@ -178,7 +178,7 @@ export default function Page4Proposal({ formData, updateFormData, errors }: Page
               <p className="mt-2 text-sm text-red-600 font-normal">{errors.proposalUrl}</p>
             )}
             <p className="text-sm text-gray-600 font-normal mt-2">
-              Upload your document to Google Drive, Dropbox, or similar and paste the share link
+              Upload dokumen ke Google Drive, Dropbox, atau cloud lainnya dan share link-nya di sini
             </p>
           </div>
         )}
@@ -195,15 +195,6 @@ export default function Page4Proposal({ formData, updateFormData, errors }: Page
                 <h4 className="text-lg font-medium text-black mb-4">Generated Proposal</h4>
                 <div className="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto border border-gray-200">
                   <pre className="whitespace-pre-wrap text-sm text-gray-700 font-normal">{formData.aiProposal}</pre>
-                </div>
-                <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-sm text-black font-normal">
-                    ✅ <strong>AI Proposal will be available at:</strong> 
-                    <br />
-                    <code className="text-gray-600">/projects/your-project-slug/proposal</code>
-                    <br />
-                    <span className="text-xs text-gray-500">Accessible after project creation - shareable and printable</span>
-                  </p>
                 </div>
               </div>
             ) : null}
@@ -234,15 +225,15 @@ export default function Page4Proposal({ formData, updateFormData, errors }: Page
       <div>
         <h3 className="text-lg font-medium text-black mb-4">AI Insights (Required)</h3>
         <p className="text-sm text-gray-600 font-normal mb-4">
-          Generate strategic insights about your project to help potential donors understand its strengths, challenges, and opportunities.
+          Cari tahu insight dari tentang project kamu. 
         </p>
 
         {!formData.aiInsights ? (
           <div className="text-center py-8 border border-black rounded-lg">
             <div className="text-4xl mb-4">🧠</div>
-            <h4 className="text-lg font-medium text-black mb-2">Generate Strategic Insights</h4>
+            <h4 className="text-lg font-medium text-black mb-2">Generate Insights</h4>
             <p className="text-gray-600 font-normal mb-4">
-              Our AI will analyze your project and provide SWOT analysis to strengthen your campaign.
+              Insight tentang strength, weakness, opportunities, dan threat. 
             </p>
             <button
               type="button"
@@ -305,7 +296,7 @@ export default function Page4Proposal({ formData, updateFormData, errors }: Page
             <span className={`mr-2 ${(formData.proposalUrl || formData.aiProposal) ? 'text-green-600' : 'text-gray-400'}`}>
               {(formData.proposalUrl || formData.aiProposal) ? '✅' : '⚪'}
             </span>
-            Proposal (uploaded or AI-generated)
+            Proposal (upload atau AI-generated)
           </div>
           <div className="flex items-center">
             <span className={`mr-2 ${formData.aiInsights ? 'text-green-600' : 'text-gray-400'}`}>

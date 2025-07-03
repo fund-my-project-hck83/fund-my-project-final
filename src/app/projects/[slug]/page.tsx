@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import ProjectChat from "@/components/ProjectChat";
 import LivestreamSection from "@/components/LivestreamSection";
+import Navbar from "@/components/Navbar";
 
 interface IApiUserResp {
   username: string;
@@ -234,6 +235,8 @@ export default function ProjectDetailPage() {
   }
 
   return (
+    <>
+    <Navbar/>
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <MidtransScript />
 
@@ -612,5 +615,6 @@ export default function ProjectDetailPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

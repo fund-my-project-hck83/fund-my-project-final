@@ -9,6 +9,7 @@ import Page1BasicInfo from "@/components/ProjectForm/Page1BasicInfo";
 import Page2Impact from "@/components/ProjectForm/Page2Impact";
 import Page3Fundraising from "@/components/ProjectForm/Page3Fundraising";
 import Page4Proposal from "@/components/ProjectForm/Page4Proposal";
+import Navbar from "@/components/Navbar";
 
 export default function AddProjectPage() {
   const router = useRouter();
@@ -325,6 +326,8 @@ export default function AddProjectPage() {
   };
 
   return (
+    <>
+    <Navbar />
     <FormWrapper
       currentStep={currentStep}
       totalSteps={4}
@@ -337,5 +340,6 @@ export default function AddProjectPage() {
     >
       {renderCurrentPage()}
     </FormWrapper>
+    </>
   );
 }

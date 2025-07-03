@@ -28,7 +28,7 @@ export default function Page1BasicInfo({ formData, updateFormData, errors }: Pag
           className={`w-full px-4 py-3 border rounded-full focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal ${
             errors.name ? 'border-red-500' : 'border-black'
           }`}
-          placeholder="Enter your project name"
+          placeholder="Nama project"
         />
         {errors.name && (
           <p className="mt-2 text-sm text-red-600 font-normal">{errors.name}</p>
@@ -47,7 +47,7 @@ export default function Page1BasicInfo({ formData, updateFormData, errors }: Pag
           className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal resize-none ${
             errors.description ? 'border-red-500' : 'border-black'
           }`}
-          placeholder="Describe your project in detail..."
+          placeholder="Ceritakan project kamu..."
         />
         {errors.description && (
           <p className="mt-2 text-sm text-red-600 font-normal">{errors.description}</p>
@@ -66,7 +66,7 @@ export default function Page1BasicInfo({ formData, updateFormData, errors }: Pag
           className={`w-full px-4 py-3 border rounded-full focus:outline-none focus:border-gray-800 transition-colors text-black bg-white placeholder-gray-500 font-normal ${
             errors.location ? 'border-red-500' : 'border-black'
           }`}
-          placeholder="City, Country"
+          placeholder="Kota"
         />
         {errors.location && (
           <p className="mt-2 text-sm text-red-600 font-normal">{errors.location}</p>

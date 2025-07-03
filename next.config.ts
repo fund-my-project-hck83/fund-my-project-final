@@ -49,6 +49,7 @@ const nextConfig: NextConfig = {
       'example.com',
       'images.gofundme.com',
       'ui-avatars.com',
+      'content.api.news'
     ],
   },
 };
