@@ -173,15 +173,13 @@ export default function LivestreamSection({
     }
   };
 
-
-
   // Loading state
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="bg-gray-50 p-6 rounded-lg text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading livestream information...</p>
+        <div className="bg-gray-50 border border-gray-300 p-6 rounded-lg text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600 font-normal">Loading livestream information...</p>
         </div>
       </div>
     );
@@ -203,14 +201,14 @@ export default function LivestreamSection({
     return (
       <div className="space-y-4">
         {/* Countdown Display */}
-        <div className="bg-blue-50 p-6 rounded-lg text-center">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">
+        <div className="bg-blue-50 border border-blue-300 p-6 rounded-lg text-center">
+          <h3 className="text-lg font-medium text-blue-900 mb-2">
             Livestream Scheduled
           </h3>
-          <div className="text-2xl font-bold text-blue-600 mb-2">
+          <div className="text-2xl font-medium text-blue-600 mb-2">
             {formatCountdown(timeUntilStream)}
           </div>
-          <p className="text-blue-700">
+          <p className="text-blue-700 font-normal">
             &quot;{livestream.title}&quot; by {userName}
           </p>
 
@@ -218,11 +216,11 @@ export default function LivestreamSection({
             <div className="mt-4">
               <button
                 onClick={handleStartStreamEarly}
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors font-normal"
               >
                 Start Stream Now
               </button>
-              <p className="text-xs text-blue-600 mt-2">
+              <p className="text-xs text-blue-600 mt-2 font-normal">
                 💡 You can start early and viewers will join immediately
               </p>
             </div>
@@ -230,26 +228,26 @@ export default function LivestreamSection({
         </div>
 
         {/* Schedule Info */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-medium text-gray-900 mb-2">Stream Details</h4>
+        <div className="bg-gray-50 border border-gray-300 p-4 rounded-lg">
+          <h4 className="font-medium text-black mb-2">Stream Details</h4>
           <div className="space-y-1 text-sm text-gray-600">
             <p>
-              <strong>Title:</strong> {livestream.title}
+              <strong className="font-medium">Title:</strong> <span className="font-normal">{livestream.title}</span>
             </p>
             <p>
-              <strong>Channel:</strong> {livestream.channelName}
+              <strong className="font-medium">Channel:</strong> <span className="font-normal">{livestream.channelName}</span>
             </p>
             <p>
-              <strong>Scheduled:</strong>{" "}
-              {formatDateTime(livestream.scheduledAt)}
+              <strong className="font-medium">Scheduled:</strong>{" "}
+              <span className="font-normal">{formatDateTime(livestream.scheduledAt)}</span>
             </p>
             {livestream.description && (
               <p>
-                <strong>Description:</strong> {livestream.description}
+                <strong className="font-medium">Description:</strong> <span className="font-normal">{livestream.description}</span>
               </p>
             )}
             {canStartStream && (
-              <p className="text-xs text-green-600 mt-2">
+              <p className="text-xs text-green-600 mt-2 font-normal">
                 ⏰ Early start available (within 2 hours of scheduled time)
               </p>
             )}
@@ -264,18 +262,18 @@ export default function LivestreamSection({
     // Owner view - can schedule livestream
     return (
       <div className="space-y-4">
-        <div className="bg-gray-50 p-6 rounded-lg text-center">
+        <div className="bg-gray-50 border border-gray-300 p-6 rounded-lg text-center">
           <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg font-medium text-black mb-2">
             No Livestream Scheduled
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-4 font-normal">
             Schedule a livestream to engage with your supporters
           </p>
 
           <button
             onClick={() => setShowScheduleModal(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition-colors font-normal"
           >
             Schedule Livestream
           </button>
@@ -296,24 +294,24 @@ export default function LivestreamSection({
     // Viewer view - shows information about no scheduled stream
     return (
       <div className="space-y-4">
-        <div className="bg-gray-50 p-6 rounded-lg text-center">
+        <div className="bg-gray-50 border border-gray-300 p-6 rounded-lg text-center">
           <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg font-medium text-black mb-2">
             No Livestream Scheduled Yet
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-4 font-normal">
             The project creator hasn&apos;t scheduled a livestream yet.
           </p>
 
           {isLoggedIn ? (
             <div className="text-sm text-gray-500">
-              <p>
+              <p className="font-normal">
                 You&apos;ll be able to join the stream when it&apos;s scheduled.
               </p>
             </div>
           ) : (
             <div className="text-sm text-gray-500">
-              <p>Log in to join livestreams when they&apos;re scheduled.</p>
+              <p className="font-normal">Log in to join livestreams when they&apos;re scheduled.</p>
             </div>
           )}
         </div>

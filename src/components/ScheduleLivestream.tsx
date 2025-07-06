@@ -111,16 +111,16 @@ export default function ScheduleLivestream({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md mx-4 w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white border border-black rounded-lg p-6 max-w-md mx-4 w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className="text-xl font-medium text-black flex items-center gap-2">
             <Video className="w-5 h-5 text-blue-600" />
             Schedule Livestream
           </h2>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-600 hover:text-black transition-colors"
             disabled={isSubmitting}
           >
             <X className="w-5 h-5" />
@@ -128,23 +128,23 @@ export default function ScheduleLivestream({
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-            <p className="text-red-800 text-sm">{error}</p>
+          <div className="bg-red-50 border border-red-300 rounded-lg p-3 mb-4">
+            <p className="text-red-800 text-sm font-normal">{error}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="text-center mb-6">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-blue-100 border border-blue-300 rounded-full flex items-center justify-center mx-auto mb-3">
               <Calendar className="w-6 h-6 text-blue-600" />
             </div>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 text-sm font-normal">
               Schedule a livestream to engage with your supporters
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-black mb-2">
               Stream Title *
             </label>
             <input
@@ -156,7 +156,7 @@ export default function ScheduleLivestream({
                   title: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-black bg-gray-50 font-normal"
               placeholder="Enter stream title"
               required
               disabled={isSubmitting}
@@ -164,7 +164,7 @@ export default function ScheduleLivestream({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-black mb-2">
               Channel Name
             </label>
             <input
@@ -176,14 +176,14 @@ export default function ScheduleLivestream({
                   channelName: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-black bg-gray-50 font-normal"
               placeholder="Enter your channel name"
               disabled={isSubmitting}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-black mb-2">
               Description *
             </label>
             <textarea
@@ -194,7 +194,7 @@ export default function ScheduleLivestream({
                   description: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-black bg-gray-50 resize-none font-normal"
               placeholder="Describe what you'll be streaming about"
               rows={3}
               required
@@ -203,7 +203,7 @@ export default function ScheduleLivestream({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-black mb-2">
               Scheduled Date & Time *
             </label>
             <input
@@ -215,11 +215,11 @@ export default function ScheduleLivestream({
                   scheduledAt: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-black bg-gray-50 font-normal"
               required
               disabled={isSubmitting}
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-1 font-normal">
               Choose a future date and time for your livestream
             </p>
           </div>
@@ -229,14 +229,14 @@ export default function ScheduleLivestream({
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-lg font-semibold hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-full font-normal hover:border-black hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-black text-white py-2 px-4 rounded-full font-normal hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>

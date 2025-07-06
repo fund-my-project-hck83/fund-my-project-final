@@ -20,28 +20,28 @@ export default function SuccessModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
-        <div className="text-green-500 text-6xl mb-4">🎉</div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">{title}</h2>
-        <p className="text-gray-600 mb-6">
+    <div className="fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white border border-black rounded-lg p-8 max-w-md mx-4 text-center">
+        <div className="text-6xl mb-4">🎉</div>
+        <h2 className="text-2xl font-medium text-black mb-4">{title}</h2>
+        <p className="text-gray-600 mb-6 font-normal">
           {message}
           {amount && (
-            <span className="font-semibold"> Rp {amount.toLocaleString()}</span>
+            <span className="font-medium"> Rp {amount.toLocaleString()}</span>
           )}
         </p>
         {showFundingUpdate && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <p className="text-green-800 font-semibold">Project funding updated in real-time!</p>
+          <div className="bg-green-100 border border-green-300 rounded-lg p-4 mb-6">
+            <p className="text-green-800 font-normal">Project funding updated in real-time!</p>
           </div>
         )}
         <button
           onClick={onClose}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors font-normal"
         >
           Continue
         </button>
       </div>
     </div>
   );
-} 
+}

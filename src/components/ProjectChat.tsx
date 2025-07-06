@@ -252,24 +252,10 @@ export default function ProjectChat({
 
         {/* View-Only Message Input */}
         <div className="p-6 border-t border-gray-200 bg-gray-50">
-          <div className="flex gap-3">
-            <div className="w-8 h-8 bg-gray-300 border border-gray-400 rounded-full flex-shrink-0"></div>
-            <div className="flex-1 relative">
-              <div className="w-full px-4 py-3 border border-gray-300 rounded-full bg-white text-gray-400 cursor-not-allowed font-normal">
-                Login to join the discussion...
-              </div>
-            </div>
-            <button
-              disabled
-              className="p-2 bg-gray-300 border border-gray-400 text-gray-500 rounded-full cursor-not-allowed"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="mt-4 text-center">
+          <div className="text-center">
             <a
               href="/login"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-sm font-normal"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors text-sm font-normal"
             >
               <Lock className="w-4 h-4" />
               Login to Participate

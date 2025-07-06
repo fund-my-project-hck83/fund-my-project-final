@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { pusherClient } from '@/lib/pusher';
 
 interface Donation {
@@ -19,6 +20,7 @@ interface RecentDonationsProps {
 export default function RecentDonations({ donations: initialDonations, projectSlug }: RecentDonationsProps) {
   const [donations, setDonations] = useState(initialDonations);
   const [isNewDonation, setIsNewDonation] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -42,7 +44,7 @@ export default function RecentDonations({ donations: initialDonations, projectSl
     
     channel.bind('new-donation', (newDonation: Donation) => {
       // Add new donation to the top of the list
-      setDonations(prev => [newDonation, ...prev.slice(0, 9)]); // Keep only 10 most recent
+      setDonations(prev => [newDonation, ...prev.slice(0, 19)]); // Keep only 20 most recent
       
       // Show visual indicator for new donation
       setIsNewDonation(true);
@@ -54,43 +56,76 @@ export default function RecentDonations({ donations: initialDonations, projectSl
     };
   }, [projectSlug]);
 
+  const visibleDonations = showAll ? donations : donations.slice(0, 5);
+  const hasMoreDonations = donations.length > 5;
+
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-gray-800">Recent Donations</h2>
+    <div className="bg-white border border-black rounded-lg p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-medium text-black">Recent Donations</h2>
         {isNewDonation && (
-          <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium animate-pulse">
+          <div className="px-3 py-1 bg-green-100 border border-green-300 text-green-800 rounded-full text-sm font-normal">
             🎉 New donation!
           </div>
         )}
       </div>
+      
       {donations.length > 0 ? (
         <div className="space-y-3">
-          {donations.map((donation, index) => (
+          {visibleDonations.map((donation, index) => (
             <div 
               key={`${donation.donorName}-${donation.createdAt}-${index}`} 
-              className={`flex justify-between items-center p-3 rounded-lg transition-all duration-300 ${
+              className={`flex justify-between items-center p-4 rounded-lg border transition-colors duration-300 ${
                 index === 0 && isNewDonation 
-                  ? 'bg-green-50 border border-green-200 animate-pulse' 
-                  : 'bg-gray-50'
+                  ? 'bg-green-50 border-green-300' 
+                  : 'bg-gray-50 border-gray-200 hover:border-gray-300'
               }`}
             >
               <div>
-                <p className="font-semibold text-gray-800">{donation.donorName}</p>
-                <p className="text-sm text-gray-600">{formatDate(donation.createdAt)}</p>
+                <p className="font-medium text-black">{donation.donorName}</p>
+                <p className="text-sm text-gray-600 font-normal">{formatDate(donation.createdAt)}</p>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-blue-600">{formatCurrency(donation.amount)}</p>
+                <p className="font-medium text-blue-600">{formatCurrency(donation.amount)}</p>
                 {donation.isExcess && (
-                  <p className="text-xs text-green-600">Excess donation</p>
+                  <p className="text-xs text-green-600 font-normal">Excess donation</p>
                 )}
               </div>
             </div>
           ))}
+
+          {/* Show More/Less Button */}
+          {hasMoreDonations && (
+            <div className="relative">
+              
+              
+              <button
+                onClick={() => setShowAll(!showAll)}
+                className="w-full flex items-center justify-center gap-2 p-3 bg-white border border-gray-300 hover:border-black text-gray-700 hover:text-black rounded-lg transition-colors font-normal"
+              >
+                {showAll ? (
+                  <>
+                    <span>Show Less</span>
+                    <ChevronUp className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    <span>See More Donations</span>
+                    <ChevronDown className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       ) : (
-        <p className="text-gray-500 text-center py-8">No donations yet. Be the first to support this project!</p>
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">💝</span>
+          </div>
+          <p className="text-gray-600 font-normal">No donations yet. Be the first to support this project!</p>
+        </div>
       )}
     </div>
   );
-} 
+}

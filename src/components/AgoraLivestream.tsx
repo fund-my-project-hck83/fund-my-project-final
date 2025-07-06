@@ -704,7 +704,7 @@ export default function AgoraLivestream({
               )}
 
               {/* Remote Video */}
-              <div className="w-full h-64 bg-gray-900 flex items-center justify-center">
+              <div className="w-full h-96 bg-gray-900 flex items-center justify-center">
                 <video
                   ref={remoteVideoRef}
                   autoPlay
@@ -728,8 +728,12 @@ export default function AgoraLivestream({
               {/* Connection Status */}
               <div className="absolute top-4 right-4 z-10">
                 <div className="flex items-center gap-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
-                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                  <span>Preview Mode</span>
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      isConnected ? "bg-green-500" : "bg-red-500"
+                    }`}
+                  ></div>
+                  <span>{isConnected ? "Connected" : "Connecting"}</span>
                 </div>
               </div>
             </div>
@@ -959,7 +963,7 @@ export default function AgoraLivestream({
         )}
 
         {/* Remote Video */}
-        <div className="w-full h-64 bg-gray-900 flex items-center justify-center">
+        <div className="w-full h-96 bg-gray-900 flex items-center justify-center">
           <video
             ref={remoteVideoRef}
             autoPlay
