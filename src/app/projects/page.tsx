@@ -6,6 +6,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { Project } from "@/server/models/ProjectModel";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import Image from "next/image";
 
 type ProjectStatus = {
   status: "completed" | "soon" | "active" | "ended";
@@ -20,9 +21,12 @@ export default function AllProjectsPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   // Add user state
-  const [currentUser, setCurrentUser] = useState<{userId: string, username: string} | null>(null);
+  const [currentUser, setCurrentUser] = useState<{
+    userId: string;
+    username: string;
+  } | null>(null);
   const [userLoading, setUserLoading] = useState(true);
-  
+
   const searchParams = useSearchParams();
   const searchTerm = searchParams.get("search") || "";
 
@@ -80,8 +84,10 @@ export default function AllProjectsPage() {
         } else {
           // Fix: Filter out duplicates before adding new projects
           setProjects((prev) => {
-            const existingIds = new Set(prev.map(p => p._id));
-            const newProjects = data.filter((project: Project) => !existingIds.has(project._id));
+            const existingIds = new Set(prev.map((p) => p._id));
+            const newProjects = data.filter(
+              (project: Project) => !existingIds.has(project._id)
+            );
             return [...prev, ...newProjects];
           });
         }
@@ -136,18 +142,30 @@ export default function AllProjectsPage() {
     const endDate = new Date(project.fundraisingEndDate);
 
     if (project.isFundingComplete) {
-      return { status: "completed", text: "Completed", style: "bg-white text-black border border-black" };
+      return {
+        status: "completed",
+        text: "Completed",
+        style: "bg-white text-black border border-black",
+      };
     }
 
     if (now < startDate) {
-      return { status: "soon", text: "Coming Soon", style: "bg-white text-black border border-gray-300" };
+      return {
+        status: "soon",
+        text: "Coming Soon",
+        style: "bg-white text-black border border-gray-300",
+      };
     }
 
     if (now >= startDate && now <= endDate) {
       return { status: "active", text: "Active", style: "bg-black text-white" };
     }
 
-    return { status: "ended", text: "Ended", style: "bg-white text-black border border-gray-300" };
+    return {
+      status: "ended",
+      text: "Ended",
+      style: "bg-white text-black border border-gray-300",
+    };
   };
 
   const getButtonText = (project: Project, status: ProjectStatus) => {
@@ -155,7 +173,7 @@ export default function AllProjectsPage() {
     if (isMyProject(project)) {
       return "See Project";
     }
-    
+
     // Otherwise, use existing logic
     if (status.status === "active") return "Donate Now";
     if (status.status === "soon") return "Coming Soon";
@@ -168,12 +186,12 @@ export default function AllProjectsPage() {
     if (isMyProject(project)) {
       return "bg-white border border-black text-black hover:bg-gray-50";
     }
-    
+
     // Make "Coming Soon" buttons appear inactive with light grey
     if (status.status === "soon") {
       return "bg-gray-100 border border-gray-300 text-gray-500 cursor-not-allowed";
     }
-    
+
     // Otherwise, use existing logic for active/other states
     return isActiveFundraising(project)
       ? "bg-black text-white hover:bg-gray-800"
@@ -216,7 +234,9 @@ export default function AllProjectsPage() {
             {loading || userLoading ? (
               <div className="flex justify-center items-center py-20">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-                <span className="ml-3 text-gray-600 font-normal">Loading projects...</span>
+                <span className="ml-3 text-gray-600 font-normal">
+                  Loading projects...
+                </span>
               </div>
             ) : (
               <>
@@ -261,10 +281,12 @@ export default function AllProjectsPage() {
                           {/* Project Image */}
                           <div className="relative h-48 bg-gray-100">
                             {project.projectImage ? (
-                              <img
+                              <Image
                                 src={project.projectImage}
                                 alt={project.name}
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">
@@ -274,7 +296,9 @@ export default function AllProjectsPage() {
 
                             {/* Status Badge */}
                             <div className="absolute top-3 left-3">
-                              <span className={`px-3 py-1 rounded-full text-xs font-normal ${status.style}`}>
+                              <span
+                                className={`px-3 py-1 rounded-full text-xs font-normal ${status.style}`}
+                              >
                                 {status.text}
                               </span>
                             </div>
@@ -335,7 +359,10 @@ export default function AllProjectsPage() {
                             <div className="mt-4">
                               <Link href={`/projects/${project.slug}`}>
                                 <button
-                                  className={`w-full py-2 rounded-full text-sm font-normal transition-colors ${getButtonStyle(project, status)}`}
+                                  className={`w-full py-2 rounded-full text-sm font-normal transition-colors ${getButtonStyle(
+                                    project,
+                                    status
+                                  )}`}
                                 >
                                   {getButtonText(project, status)}
                                 </button>

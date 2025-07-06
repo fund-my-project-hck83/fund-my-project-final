@@ -1,25 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { IProject } from '@/interfaces/interfaces';
-import Navbar from '@/components/Navbar';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { IProject } from "@/interfaces/interfaces";
+import Navbar from "@/components/Navbar";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function TrendingProjectsPage() {
   const [projects, setProjects] = useState<IProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [limit, setLimit] = useState(8);
-  const [method, setMethod] = useState<'percentage' | 'amount'>('percentage');
+  const [method, setMethod] = useState<"percentage" | "amount">("percentage");
 
   useEffect(() => {
     const fetchTrendingProjects = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/projects/trending?limit=${limit}&method=${method}`);
+        const response = await fetch(
+          `/api/projects/trending?limit=${limit}&method=${method}`
+        );
         const data = await response.json();
         setProjects(data);
       } catch (error) {
-        console.error('Error fetching trending projects:', error);
+        console.error("Error fetching trending projects:", error);
       } finally {
         setLoading(false);
       }
@@ -29,9 +32,9 @@ export default function TrendingProjectsPage() {
   }, [limit, method]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
@@ -42,16 +45,16 @@ export default function TrendingProjectsPage() {
   };
 
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(date).toLocaleDateString("id-ID", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   return (
     <>
-      <Navbar/>
+      <Navbar />
       <div className="min-h-screen bg-white">
         {/* Page Header */}
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
@@ -61,25 +64,27 @@ export default function TrendingProjectsPage() {
                 Trending Projects
               </h1>
               <p className="text-lg text-gray-600 max-w-3xl mx-auto font-normal">
-                {method === 'percentage' && 'Projects yang hampir mencapai target'}
-                {method === 'amount' && 'Projects yang mengumpulkan donasi terbesar'}
+                {method === "percentage" &&
+                  "Projects yang hampir mencapai target"}
+                {method === "amount" &&
+                  "Projects yang mengumpulkan donasi terbesar"}
               </p>
             </div>
 
             {/* Filter Controls */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-black">
-                  Sort:
-                </label>
+                <label className="text-sm font-medium text-black">Sort:</label>
                 <select
                   value={method}
-                  onChange={(e) => setMethod(e.target.value as 'percentage' | 'amount')}
+                  onChange={(e) =>
+                    setMethod(e.target.value as "percentage" | "amount")
+                  }
                   className="border border-black rounded-full px-4 py-2 pr-8 focus:outline-none focus:border-gray-800 text-sm font-normal bg-white appearance-none bg-no-repeat bg-right"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: 'right 12px center',
-                    backgroundSize: '16px 16px'
+                    backgroundPosition: "right 12px center",
+                    backgroundSize: "16px 16px",
                   }}
                 >
                   <option value="percentage">Mendekati Target</option>
@@ -87,17 +92,15 @@ export default function TrendingProjectsPage() {
                 </select>
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-black">
-                  Lihat:
-                </label>
+                <label className="text-sm font-medium text-black">Lihat:</label>
                 <select
                   value={limit}
                   onChange={(e) => setLimit(parseInt(e.target.value))}
                   className="border border-black rounded-full px-4 py-2 pr-8 focus:outline-none focus:border-gray-800 text-sm font-normal bg-white appearance-none bg-no-repeat bg-right"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: 'right 12px center',
-                    backgroundSize: '16px 16px'
+                    backgroundPosition: "right 12px center",
+                    backgroundSize: "16px 16px",
                   }}
                 >
                   <option value={4}>4 Projects</option>
@@ -116,7 +119,10 @@ export default function TrendingProjectsPage() {
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[...Array(8)].map((_, index) => (
-                  <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden animate-pulse">
+                  <div
+                    key={index}
+                    className="bg-white border border-gray-200 rounded-lg overflow-hidden animate-pulse"
+                  >
                     <div className="h-48 bg-gray-300"></div>
                     <div className="p-6">
                       <div className="h-4 bg-gray-300 rounded mb-2"></div>
@@ -145,20 +151,23 @@ export default function TrendingProjectsPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {projects.map((project, index) => (
-                  <div key={project._id.toString()} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-colors flex flex-col h-full">
+                  <div
+                    key={project._id.toString()}
+                    className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-colors flex flex-col h-full"
+                  >
                     {/* Project Image */}
                     <div className="relative h-48 bg-gray-100">
                       {project.projectImage ? (
-                        <img
+                        <Image
                           src={project.projectImage}
                           alt={project.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         />
                       ) : (
                         <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-gray-400 text-4xl">
-                            📷
-                          </span>
+                          <span className="text-gray-400 text-4xl">📷</span>
                         </div>
                       )}
                       <div className="absolute top-3 left-3">
@@ -195,16 +204,25 @@ export default function TrendingProjectsPage() {
                         {/* Progress Bar */}
                         <div className="mb-4">
                           <div className="flex justify-between text-sm mb-2">
-                            <span className="text-gray-600 font-normal">Progress</span>
+                            <span className="text-gray-600 font-normal">
+                              Progress
+                            </span>
                             <span className="font-medium text-black">
-                              {calculateProgress(project.currentFunding, project.fundingGoal).toFixed(1)}%
+                              {calculateProgress(
+                                project.currentFunding,
+                                project.fundingGoal
+                              ).toFixed(1)}
+                              %
                             </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-1">
                             <div
                               className="bg-black h-full rounded-full transition-all duration-300"
                               style={{
-                                width: `${calculateProgress(project.currentFunding, project.fundingGoal)}%`
+                                width: `${calculateProgress(
+                                  project.currentFunding,
+                                  project.fundingGoal
+                                )}%`,
                               }}
                             ></div>
                           </div>
@@ -213,13 +231,17 @@ export default function TrendingProjectsPage() {
                         {/* Funding Info */}
                         <div className="space-y-2 mb-4">
                           <div className="flex justify-between">
-                            <span className="text-sm text-gray-600 font-normal">Terkumpul:</span>
+                            <span className="text-sm text-gray-600 font-normal">
+                              Terkumpul:
+                            </span>
                             <span className="text-sm font-medium text-black">
                               {formatCurrency(project.currentFunding)}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-sm text-gray-600 font-normal">Target:</span>
+                            <span className="text-sm text-gray-600 font-normal">
+                              Target:
+                            </span>
                             <span className="text-sm font-medium text-black">
                               {formatCurrency(project.fundingGoal)}
                             </span>
