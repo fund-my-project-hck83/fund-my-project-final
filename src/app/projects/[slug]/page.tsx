@@ -199,7 +199,7 @@ export default function ProjectDetailPage() {
   return (
     <>
     <Navbar/>
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-white">
       <MidtransScript />
 
       {/* Modals */}
@@ -232,17 +232,17 @@ export default function ProjectDetailPage() {
         <div className="lg:hidden mb-6">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="flex items-center gap-2 px-4 py-3 bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200"
+            className="flex items-center gap-2 px-4 py-3 bg-white border border-black rounded-lg hover:bg-gray-50 transition-colors font-normal"
           >
             {sidebarOpen ? (
               <>
                 <X className="w-4 h-4" />
-                Close Sidebar
+                <span>Close Project Info</span>
               </>
             ) : (
               <>
                 <Menu className="w-4 h-4" />
-                Project Info
+                <span>View Project Info</span>
               </>
             )}
           </button>
@@ -288,16 +288,16 @@ export default function ProjectDetailPage() {
             />
 
             {/* Livestream Section */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <div className="bg-white border border-black rounded-lg p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
                   <Video className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">
+                  <h2 className="text-2xl font-medium text-black">
                     Live Stream
                   </h2>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 font-normal">
                     Watch live updates and engage with the project creator
                   </p>
                 </div>
@@ -463,16 +463,16 @@ export default function ProjectDetailPage() {
 
             {/* Project Proposal Section */}
             {(project.proposalDocumentUrl || project.aiProposal) && (
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+              <div className="bg-white border border-black rounded-lg p-8">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                     <FileText className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-medium text-black">
                       Project Proposal
                     </h2>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 font-normal">
                       Detailed project documentation and planning
                     </p>
                   </div>
@@ -481,20 +481,20 @@ export default function ProjectDetailPage() {
                 {/* Priority: Show Document URL if exists, otherwise show AI Proposal */}
                 {project.proposalDocumentUrl ? (
                   // Show Document URL (Priority 1)
-                  <div className="p-6 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+                  <div className="p-6 rounded-lg border border-gray-300 bg-gray-50">
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="w-6 h-6 bg-gray-500 rounded-lg flex items-center justify-center">
+                      <div className="w-6 h-6 bg-gray-600 rounded-lg flex items-center justify-center">
                         <FileText className="w-3 h-3 text-white" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-800">
+                      <h3 className="text-lg font-medium text-black">
                         Proposal Document
                       </h3>
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                      <span className="px-2 py-1 text-xs font-normal rounded-full bg-gray-100 text-gray-700 border border-gray-200">
                         PDF/Document
                       </span>
                     </div>
 
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-sm text-gray-600 mb-4 font-normal">
                       Access the complete project proposal document with
                       detailed specifications, timelines, and budget breakdown.
                     </p>
@@ -504,7 +504,7 @@ export default function ProjectDetailPage() {
                       href={project.proposalDocumentUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-all duration-200 text-sm"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-full font-normal transition-colors text-sm"
                     >
                       <ExternalLink className="w-4 h-4" />
                       View Document
@@ -513,22 +513,22 @@ export default function ProjectDetailPage() {
                 ) : (
                   // Show AI Proposal (Priority 2 - only if no document URL)
                   project.aiProposal && (
-                    <div className="p-6 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+                    <div className="p-6 rounded-lg border border-blue-300 bg-blue-50">
                       <div className="flex items-center gap-2 mb-4">
-                        <div className="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center">
                           <span className="text-white text-xs">✨</span>
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-800">
+                        <h3 className="text-lg font-medium text-black">
                           AI-Generated Proposal
                         </h3>
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                        <span className="px-2 py-1 text-xs font-normal rounded-full bg-blue-100 text-blue-700 border border-blue-200">
                           AI Enhanced
                         </span>
                       </div>
 
                       {/* Preview Text */}
                       <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed mb-4">
-                        <p>
+                        <p className="font-normal">
                           {project.aiProposal.length > 300
                             ? `${project.aiProposal.substring(0, 300)}...`
                             : project.aiProposal}
@@ -538,7 +538,7 @@ export default function ProjectDetailPage() {
                       {/* View Full Proposal Button */}
                       <Link
                         href={`/projects/${project.slug}/proposal`}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 text-sm"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-normal transition-colors text-sm"
                       >
                         <Eye className="w-4 h-4" />
                         View Full Proposal

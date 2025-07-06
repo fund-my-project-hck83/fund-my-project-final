@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { pusherClient } from '@/lib/pusher';
+import { TrendingUp } from 'lucide-react';
 
 interface FundingProgressProps {
   currentFunding: number;
@@ -56,19 +57,19 @@ export default function FundingProgress({
     if (currentFunding > fundingGoal) {
       return {
         text: 'Exceeding Goal',
-        color: 'bg-purple-100 text-purple-800 border-purple-200',
+        color: 'bg-purple-100 text-purple-800 border border-purple-300',
         icon: '🎯'
       };
     } else if (isFundingComplete) {
       return {
         text: 'Funding Complete',
-        color: 'bg-green-100 text-green-800 border-green-200',
+        color: 'bg-green-100 text-green-800 border border-green-300',
         icon: '🎉'
       };
     } else {
       return {
         text: 'Active Funding',
-        color: 'bg-blue-100 text-blue-800 border-blue-200',
+        color: 'bg-blue-100 text-blue-800 border border-blue-300',
         icon: '📈'
       };
     }
@@ -105,39 +106,51 @@ export default function FundingProgress({
   const statusBadge = getStatusBadge();
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-gray-800">Funding Progress</h2>
-        <div className="flex items-center gap-2">
-          <div className={`px-3 py-1 rounded-full border text-sm font-semibold ${statusBadge.color}`}>
-            <span className="mr-1">{statusBadge.icon}</span>
-            {statusBadge.text}
-          </div>
-          {isUpdating && (
-            <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium animate-pulse">
-              🔄 Live Update
-            </div>
-          )}
+    <div className="bg-white border border-black rounded-lg p-8">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
+          <TrendingUp className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-medium text-black">
+            Funding Progress
+          </h2>
+          <p className="text-sm text-gray-600 font-normal">
+            Track project funding status and goals
+          </p>
         </div>
       </div>
 
+      {/* Status Badge and Live Update */}
+      <div className="flex items-center gap-2 mb-6">
+        <div className={`px-3 py-1 rounded-full text-sm font-normal ${statusBadge.color}`}>
+          <span className="mr-1">{statusBadge.icon}</span>
+          {statusBadge.text}
+        </div>
+        {isUpdating && (
+          <div className="px-3 py-1 bg-blue-100 text-blue-800 border border-blue-300 rounded-full text-sm font-normal animate-pulse">
+            🔄 Live Update
+          </div>
+        )}
+      </div>
+
       {/* Funding Amounts */}
-      <div className="mb-4">
-        <div className="flex justify-between text-sm text-gray-600 mb-2">
+      <div className="mb-6">
+        <div className="flex justify-between text-sm text-gray-600 mb-3 font-normal">
           <span>Raised: {formatCurrency(currentFunding)}</span>
           <span>Goal: {formatCurrency(fundingGoal)}</span>
         </div>
         
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+        <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
           <div 
-            className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+            className="bg-black h-2 rounded-full transition-all duration-300"
             style={{ width: `${getProgressPercentage()}%` }}
           ></div>
         </div>
         
         <div className="text-center">
-          <span className="text-lg font-semibold text-blue-600">
+          <span className="text-lg font-medium text-black">
             {getProgressPercentage().toFixed(1)}% Complete
           </span>
         </div>
@@ -145,11 +158,11 @@ export default function FundingProgress({
 
       {/* Excess Funding Info */}
       {currentFunding > fundingGoal && (
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+        <div className="bg-purple-100 border border-purple-300 rounded-lg p-4 mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-800 font-semibold">Exceeding Goal!</p>
-              <p className="text-purple-600 text-sm">
+              <p className="text-purple-800 font-medium">Exceeding Goal!</p>
+              <p className="text-purple-600 text-sm font-normal">
                 {formatCurrency(getExcessAmount())} over target ({getExcessPercentage().toFixed(1)}%)
               </p>
             </div>
@@ -160,12 +173,12 @@ export default function FundingProgress({
 
       {/* Funding Complete Info */}
       {isFundingComplete && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="bg-green-100 border border-green-300 rounded-lg p-4 mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-800 font-semibold">🎉 Funding Goal Achieved!</p>
+              <p className="text-green-800 font-medium">🎉 Funding Goal Achieved!</p>
               {completedAt && (
-                <p className="text-green-600 text-sm">
+                <p className="text-green-600 text-sm font-normal">
                   Completed on {formatDate(completedAt)}
                 </p>
               )}
@@ -176,20 +189,20 @@ export default function FundingProgress({
       )}
 
       {/* Funding Statistics */}
-      <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-200">
+      <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-200">
         <div className="text-center">
-          <p className="text-2xl font-bold text-blue-600">
+          <p className="text-2xl font-medium text-black">
             {formatCurrency(currentFunding)}
           </p>
-          <p className="text-sm text-gray-600">Total Raised</p>
+          <p className="text-sm text-gray-600 font-normal">Total Raised</p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold text-gray-800">
+          <p className="text-2xl font-medium text-black">
             {formatCurrency(fundingGoal)}
           </p>
-          <p className="text-sm text-gray-600">Funding Goal</p>
+          <p className="text-sm text-gray-600 font-normal">Funding Goal</p>
         </div>
       </div>
     </div>
   );
-} 
+}
