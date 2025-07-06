@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Video } from "lucide-react";
 import { ILivestream } from "@/interfaces/interfaces";
 import ScheduleLivestream from "@/components/ScheduleLivestream";
-import AgoraLivestream from "@/components/AgoraLivestream";
 import { pusherClient } from "@/lib/pusher";
+
+// Dynamic import to prevent Agora SDK from being bundled initially
+const AgoraLivestream = lazy(() => import("@/components/AgoraLivestream"));
 
 interface LivestreamSectionProps {
   projectSlug: string;
@@ -85,38 +87,49 @@ export default function LivestreamSection({
     if (!projectSlug) return;
 
     const channel = pusherClient.subscribe(`project-${projectSlug}-livestream`);
-    
-    channel.bind('livestream-started', (data: {
-      isLive: boolean;
-      actualStartTime: Date;
-      startedEarly: boolean;
-      channelName: string;
-      title: string;
-    }) => {
-      console.log('Livestream started via Pusher:', data);
-      setIsStreaming(true);
-      
-      // Update livestream data if we have it
-      if (livestream) {
-        setLivestream(prev => prev ? {
-          ...prev,
-          isLive: data.isLive,
-          actualStartTime: data.actualStartTime,
-          startedEarly: data.startedEarly
-        } : null);
-      }
-    });
 
-    channel.bind('livestream-stopped', () => {
-      console.log('Livestream stopped via Pusher');
+    channel.bind(
+      "livestream-started",
+      (data: {
+        isLive: boolean;
+        actualStartTime: Date;
+        startedEarly: boolean;
+        channelName: string;
+        title: string;
+      }) => {
+        console.log("Livestream started via Pusher:", data);
+        setIsStreaming(true);
+
+        // Update livestream data if we have it
+        if (livestream) {
+          setLivestream((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  isLive: data.isLive,
+                  actualStartTime: data.actualStartTime,
+                  startedEarly: data.startedEarly,
+                }
+              : null
+          );
+        }
+      }
+    );
+
+    channel.bind("livestream-stopped", () => {
+      console.log("Livestream stopped via Pusher");
       setIsStreaming(false);
-      
+
       // Update livestream data if we have it
       if (livestream) {
-        setLivestream(prev => prev ? {
-          ...prev,
-          isLive: false
-        } : null);
+        setLivestream((prev) =>
+          prev
+            ? {
+                ...prev,
+                isLive: false,
+              }
+            : null
+        );
       }
     });
 
@@ -134,11 +147,6 @@ export default function LivestreamSection({
         const timeLeft = streamTime - now;
 
         setTimeUntilStream(timeLeft);
-
-        // Auto-start stream when time is up
-        if (timeLeft <= 0) {
-          setIsStreaming(true);
-        }
       }, 1000);
 
       return () => clearInterval(timer);
@@ -154,22 +162,22 @@ export default function LivestreamSection({
 
     try {
       const response = await fetch(`/api/livestreams/project/${projectSlug}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ startedEarly: true }),
       });
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Stream started early:', result);
+        console.log("Stream started early:", result);
         // The Pusher event will handle updating the UI
       } else {
-        console.error('Failed to start stream early');
+        console.error("Failed to start stream early");
       }
     } catch (error) {
-      console.error('Error starting stream early:', error);
+      console.error("Error starting stream early:", error);
     }
   };
 
@@ -179,7 +187,9 @@ export default function LivestreamSection({
       <div className="space-y-4">
         <div className="bg-gray-50 border border-gray-300 p-6 rounded-lg text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600 font-normal">Loading livestream information...</p>
+          <p className="text-gray-600 font-normal">
+            Loading livestream information...
+          </p>
         </div>
       </div>
     );
@@ -188,12 +198,14 @@ export default function LivestreamSection({
   // Render logic based on state
   if (isStreaming) {
     return (
-      <AgoraLivestream
-        isHost={isOwner}
-        userId={userId}
-        userName={userName}
-        channelName={livestream?.channelName || ""}
-      />
+      <Suspense fallback={<div>Loading AgoraLivestream...</div>}>
+        <AgoraLivestream
+          isHost={isOwner}
+          userId={userId}
+          userName={userName}
+          channelName={livestream?.channelName || ""}
+        />
+      </Suspense>
     );
   }
 
@@ -232,18 +244,23 @@ export default function LivestreamSection({
           <h4 className="font-medium text-black mb-2">Stream Details</h4>
           <div className="space-y-1 text-sm text-gray-600">
             <p>
-              <strong className="font-medium">Title:</strong> <span className="font-normal">{livestream.title}</span>
+              <strong className="font-medium">Title:</strong>{" "}
+              <span className="font-normal">{livestream.title}</span>
             </p>
             <p>
-              <strong className="font-medium">Channel:</strong> <span className="font-normal">{livestream.channelName}</span>
+              <strong className="font-medium">Channel:</strong>{" "}
+              <span className="font-normal">{livestream.channelName}</span>
             </p>
             <p>
               <strong className="font-medium">Scheduled:</strong>{" "}
-              <span className="font-normal">{formatDateTime(livestream.scheduledAt)}</span>
+              <span className="font-normal">
+                {formatDateTime(livestream.scheduledAt)}
+              </span>
             </p>
             {livestream.description && (
               <p>
-                <strong className="font-medium">Description:</strong> <span className="font-normal">{livestream.description}</span>
+                <strong className="font-medium">Description:</strong>{" "}
+                <span className="font-normal">{livestream.description}</span>
               </p>
             )}
             {canStartStream && (
@@ -311,7 +328,9 @@ export default function LivestreamSection({
             </div>
           ) : (
             <div className="text-sm text-gray-500">
-              <p className="font-normal">Log in to join livestreams when they&apos;re scheduled.</p>
+              <p className="font-normal">
+                Log in to join livestreams when they&apos;re scheduled.
+              </p>
             </div>
           )}
         </div>

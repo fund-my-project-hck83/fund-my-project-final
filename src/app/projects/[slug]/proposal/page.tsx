@@ -1,34 +1,37 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Project } from '@/types';
-import { ArrowLeft, Printer, Share2 } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Project } from "@/types";
+import { ArrowLeft, Printer, Share2 } from "lucide-react";
 
-export default function ProposalPage({ params }: { params: Promise<{ slug: string }> }) {
+export default function ProposalPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [slug, setSlug] = useState<string>('');
+  const [slug, setSlug] = useState<string>("");
 
   useEffect(() => {
     const initializeAndFetch = async () => {
       try {
-        // Await the params Promise
-        const resolvedParams = await params;
-        setSlug(resolvedParams.slug);
-        
-        const response = await fetch(`/api/projects/${resolvedParams.slug}`);
+        const { slug } = await params;
+        setSlug(slug);
+
+        const response = await fetch(`/api/projects/${slug}`);
         if (response.ok) {
           const projectData = await response.json();
           setProject(projectData);
         } else {
-          setError('Project not found');
+          setError("Project not found");
         }
       } catch (error) {
-        console.error('Error fetching project:', error);
-        setError('Failed to load project');
+        console.error("Error fetching project:", error);
+        setError("Failed to load project");
       } finally {
         setLoading(false);
       }
@@ -38,9 +41,9 @@ export default function ProposalPage({ params }: { params: Promise<{ slug: strin
   }, [params]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
       minimumFractionDigits: 0,
     }).format(amount);
   };
@@ -63,8 +66,12 @@ export default function ProposalPage({ params }: { params: Promise<{ slug: strin
           <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-4xl">📄</span>
           </div>
-          <h1 className="text-2xl font-medium text-black mb-4">Proposal Not Found</h1>
-          <p className="text-gray-600 mb-8 font-normal">{error || 'The proposal you\'re looking for doesn\'t exist.'}</p>
+          <h1 className="text-2xl font-medium text-black mb-4">
+            Proposal Not Found
+          </h1>
+          <p className="text-gray-600 mb-8 font-normal">
+            {error || "The proposal you're looking for doesn't exist."}
+          </p>
           <button
             onClick={() => router.back()}
             className="bg-black text-white px-6 py-3 rounded-full hover:bg-gray-800 transition-colors font-normal"
@@ -83,8 +90,12 @@ export default function ProposalPage({ params }: { params: Promise<{ slug: strin
           <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-4xl">🤖</span>
           </div>
-          <h1 className="text-2xl font-medium text-black mb-4">No AI Proposal Available</h1>
-          <p className="text-gray-600 mb-8 font-normal">This project doesn&apos;t have an AI-generated proposal.</p>
+          <h1 className="text-2xl font-medium text-black mb-4">
+            No AI Proposal Available
+          </h1>
+          <p className="text-gray-600 mb-8 font-normal">
+            This project doesn&apos;t have an AI-generated proposal.
+          </p>
           <button
             onClick={() => router.push(`/projects/${slug}`)}
             className="bg-black text-white px-6 py-3 rounded-full hover:bg-gray-800 transition-colors font-normal"
@@ -111,7 +122,9 @@ export default function ProposalPage({ params }: { params: Promise<{ slug: strin
                 Back to Project
               </button>
               <div className="h-6 w-px bg-gray-300"></div>
-              <h1 className="text-xl font-medium text-black">AI-Generated Proposal</h1>
+              <h1 className="text-xl font-medium text-black">
+                AI-Generated Proposal
+              </h1>
             </div>
             <div className="flex items-center space-x-3">
               <button
@@ -124,7 +137,7 @@ export default function ProposalPage({ params }: { params: Promise<{ slug: strin
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
-                  alert('Link copied to clipboard!');
+                  alert("Link copied to clipboard!");
                 }}
                 className="flex items-center px-3 py-2 text-sm text-white bg-black rounded-full hover:bg-gray-800 transition-colors font-normal"
               >
@@ -145,7 +158,9 @@ export default function ProposalPage({ params }: { params: Promise<{ slug: strin
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h1 className="text-3xl font-medium mb-3">{project.name}</h1>
-                  <p className="text-gray-300 text-lg font-normal">{project.description}</p>
+                  <p className="text-gray-300 text-lg font-normal">
+                    {project.description}
+                  </p>
                 </div>
                 <div className="ml-6">
                   <div className="bg-white text-black border border-gray-300 rounded-lg px-3 py-2 text-sm font-normal">
@@ -153,19 +168,25 @@ export default function ProposalPage({ params }: { params: Promise<{ slug: strin
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div className="bg-gray-100 border border-gray-300 rounded-lg p-3">
                   <div className="text-gray-600 font-normal">Location</div>
-                  <div className="font-medium text-black">📍 {project.location}</div>
+                  <div className="font-medium text-black">
+                    📍 {project.location}
+                  </div>
                 </div>
                 <div className="bg-gray-100 border border-gray-300 rounded-lg p-3">
                   <div className="text-gray-600 font-normal">Funding Goal</div>
-                  <div className="font-medium text-black">💰 {formatCurrency(project.fundingGoal)}</div>
+                  <div className="font-medium text-black">
+                    💰 {formatCurrency(project.fundingGoal)}
+                  </div>
                 </div>
                 <div className="bg-gray-100 border border-gray-300 rounded-lg p-3">
                   <div className="text-gray-600 font-normal">Generated</div>
-                  <div className="font-medium text-black">📅 {new Date().toLocaleDateString('id-ID')}</div>
+                  <div className="font-medium text-black">
+                    📅 {new Date().toLocaleDateString("id-ID")}
+                  </div>
                 </div>
               </div>
             </div>
@@ -173,32 +194,52 @@ export default function ProposalPage({ params }: { params: Promise<{ slug: strin
             {/* Document Body */}
             <div className="p-8 md:p-12">
               <div className="prose prose-lg max-w-none">
-                <div 
+                <div
                   className="text-gray-700 leading-relaxed font-normal"
-                  style={{ 
-                    whiteSpace: 'pre-wrap',
-                    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif'
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    fontFamily:
+                      '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
                   }}
                   dangerouslySetInnerHTML={{
                     __html: project.aiProposal
                       // Convert markdown-style headers to HTML
-                      .replace(/^### (.*$)/gm, '<h3 class="text-xl font-medium text-black mt-6 mb-3">$1</h3>')
-                      .replace(/^## (.*$)/gm, '<h2 class="text-2xl font-medium text-black mt-8 mb-4">$1</h2>')
-                      .replace(/^# (.*$)/gm, '<h1 class="text-3xl font-medium text-black mt-8 mb-6">$1</h1>')
+                      .replace(
+                        /^### (.*$)/gm,
+                        '<h3 class="text-xl font-medium text-black mt-6 mb-3">$1</h3>'
+                      )
+                      .replace(
+                        /^## (.*$)/gm,
+                        '<h2 class="text-2xl font-medium text-black mt-8 mb-4">$1</h2>'
+                      )
+                      .replace(
+                        /^# (.*$)/gm,
+                        '<h1 class="text-3xl font-medium text-black mt-8 mb-6">$1</h1>'
+                      )
                       // Convert markdown-style bold text
-                      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-medium text-black">$1</strong>')
+                      .replace(
+                        /\*\*(.*?)\*\*/g,
+                        '<strong class="font-medium text-black">$1</strong>'
+                      )
                       // Convert markdown-style bullet points
-                      .replace(/^- (.*$)/gm, '<li class="ml-4 mb-1 font-normal">• $1</li>')
+                      .replace(
+                        /^- (.*$)/gm,
+                        '<li class="ml-4 mb-1 font-normal">• $1</li>'
+                      )
                       // Convert line breaks to proper spacing
                       .replace(/\n\n/g, '</p><p class="mb-4 font-normal">')
                       // Wrap everything in paragraphs
                       .replace(/^(.+)$/gm, (match, p1) => {
                         // Don't wrap headers or list items
-                        if (p1.startsWith('<h') || p1.startsWith('<li') || p1.trim() === '') {
+                        if (
+                          p1.startsWith("<h") ||
+                          p1.startsWith("<li") ||
+                          p1.trim() === ""
+                        ) {
                           return p1;
                         }
                         return `<p class="mb-4 font-normal">${p1}</p>`;
-                      })
+                      }),
                   }}
                 />
               </div>
@@ -208,17 +249,24 @@ export default function ProposalPage({ params }: { params: Promise<{ slug: strin
             <div className="border-t border-gray-200 bg-gray-50 p-6 text-center">
               <div className="text-sm text-gray-600">
                 <p className="mb-2">
-                  <strong className="font-medium">Proposal AI untuk {project.name}</strong>
+                  <strong className="font-medium">
+                    Proposal AI untuk {project.name}
+                  </strong>
                 </p>
                 <p className="font-normal">
-                  Dibuat pada {new Date().toLocaleDateString('id-ID', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })} | 
+                  Dibuat pada{" "}
+                  {new Date().toLocaleDateString("id-ID", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}{" "}
+                  |
                   <span className="ml-2">
-                    Target Dampak: {project.impactMetrics?.map(m => `${m.number} ${m.description}`).join(', ') || 'N/A'}
+                    Target Dampak:{" "}
+                    {project.impactMetrics
+                      ?.map((m) => `${m.number} ${m.description}`)
+                      .join(", ") || "N/A"}
                   </span>
                 </p>
               </div>
@@ -248,10 +296,18 @@ export default function ProposalPage({ params }: { params: Promise<{ slug: strin
       {/* Print Styles */}
       <style jsx>{`
         @media print {
-          .sticky { position: static !important; }
-          button { display: none !important; }
-          .border-black { border-color: #000 !important; }
-          .bg-white { background: white !important; }
+          .sticky {
+            position: static !important;
+          }
+          button {
+            display: none !important;
+          }
+          .border-black {
+            border-color: #000 !important;
+          }
+          .bg-white {
+            background: white !important;
+          }
         }
       `}</style>
     </div>
