@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Video,
   Mic,
@@ -25,6 +25,7 @@ interface AgoraLivestreamProps {
   userId: string;
   userName: string;
   channelName: string;
+  projectSlug: string;
   onViewerCountChange?: (count: number) => void;
 }
 
@@ -32,6 +33,7 @@ export default function AgoraLivestream({
   isHost,
   userId,
   channelName,
+  projectSlug,
   onViewerCountChange,
 }: AgoraLivestreamProps) {
   const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +67,15 @@ export default function AgoraLivestream({
     token: null, // For testing, we'll use null token (not recommended for production)
     uid: userId,
   };
+
+  // Add state for camera preview
+  const [cameraPreviewStream, setCameraPreviewStream] =
+    useState<MediaStream | null>(null);
+  const [cameraLoading, setCameraLoading] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
+  // Add state
+  const [hasStartedPreview, setHasStartedPreview] = useState(false);
 
   // Initialize Agora client
   const initializeAgoraClient = async () => {
@@ -116,6 +127,33 @@ export default function AgoraLivestream({
     }
   };
 
+  // Update viewer count in database and trigger Pusher event
+  const updateViewerCount = async (newCount: number) => {
+    try {
+      const response = await fetch(`/api/livestreams/project/${projectSlug}`, {
+        // Change channelName to projectSlug
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          viewerCount: newCount,
+          hostConnected: isConnected,
+          streamQuality: "good",
+          isScreenSharing: isScreenSharing,
+        }),
+      });
+
+      if (response.ok) {
+        console.log("✅ Viewer count updated:", newCount);
+      } else {
+        console.error("❌ Failed to update viewer count");
+      }
+    } catch (error) {
+      console.error("❌ Error updating viewer count:", error);
+    }
+  };
+
   // Handle user published (when someone starts streaming)
   const handleUserPublished = async (
     user: AgoraUserType,
@@ -142,6 +180,9 @@ export default function AgoraLivestream({
       const newViewerCount = remoteUsersRef.current.length + 1;
       setViewerCount(newViewerCount);
       onViewerCountChange?.(newViewerCount);
+
+      // Update viewer count in database
+      await updateViewerCount(newViewerCount);
     } catch (error) {
       console.error("❌ Failed to subscribe to user:", error);
     }
@@ -160,6 +201,9 @@ export default function AgoraLivestream({
     const newViewerCount = Math.max(0, remoteUsersRef.current.length);
     setViewerCount(newViewerCount);
     onViewerCountChange?.(newViewerCount);
+
+    // Update viewer count in database
+    updateViewerCount(newViewerCount);
   };
 
   // Handle user joined
@@ -171,6 +215,9 @@ export default function AgoraLivestream({
     const newViewerCount = remoteUsersRef.current.length;
     setViewerCount(newViewerCount);
     onViewerCountChange?.(newViewerCount);
+
+    // Update viewer count in database
+    updateViewerCount(newViewerCount);
   };
 
   // Handle user left
@@ -186,6 +233,9 @@ export default function AgoraLivestream({
     const newViewerCount = Math.max(0, remoteUsersRef.current.length);
     setViewerCount(newViewerCount);
     onViewerCountChange?.(newViewerCount);
+
+    // Update viewer count in database
+    updateViewerCount(newViewerCount);
   };
 
   // Join channel
@@ -228,7 +278,7 @@ export default function AgoraLivestream({
     try {
       console.log("🎥 Initializing local stream...");
 
-      // First, get basic camera access for preview
+      // Step 1: Get camera permissions and display immediately
       const basicStream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
@@ -238,37 +288,49 @@ export default function AgoraLivestream({
         audio: true,
       });
 
-      console.log(
-        "📹 Basic camera stream obtained:",
-        basicStream.getVideoTracks().length,
-        "video tracks"
-      );
+      console.log("📹 Camera stream obtained successfully");
 
-      // Display local video immediately for preview
+      // Step 2: Display local video immediately for preview
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = basicStream;
         localStreamRef.current = basicStream;
 
-        // Ensure video plays
-        localVideoRef.current.onloadedmetadata = () => {
-          console.log("✅ Local video metadata loaded");
-          if (localVideoRef.current) {
-            localVideoRef.current
-              .play()
-              .catch((e) => console.log("Video play error:", e));
-          }
-        };
-
-        // Force play
+        // Ensure video plays immediately
         try {
           await localVideoRef.current.play();
-          console.log("✅ Local video started playing");
-        } catch (e) {
-          console.log("Video play failed, will retry:", e);
+          console.log("✅ Local video started playing immediately");
+        } catch (playError) {
+          console.log("Video play failed, will retry:", playError);
+          // Retry play after metadata loads
+          localVideoRef.current.onloadedmetadata = async () => {
+            try {
+              await localVideoRef.current?.play();
+              console.log("✅ Local video started playing after metadata load");
+            } catch (e) {
+              console.error("Failed to play video after metadata:", e);
+            }
+          };
         }
+
+        // Add event listeners for debugging
+        localVideoRef.current.onloadedmetadata = () => {
+          console.log("✅ Local video metadata loaded");
+        };
+
+        localVideoRef.current.oncanplay = () => {
+          console.log("✅ Local video can play");
+        };
+
+        localVideoRef.current.onplay = () => {
+          console.log("✅ Local video started playing");
+        };
+
+        localVideoRef.current.onerror = (e) => {
+          console.error("❌ Local video error:", e);
+        };
       }
 
-      // Now try to initialize Agora tracks (but don't let it interfere with basic stream)
+      // Step 3: Initialize Agora tracks (separate from camera display)
       try {
         const AgoraRTC = await import("agora-rtc-sdk-ng");
 
@@ -277,6 +339,11 @@ export default function AgoraLivestream({
           await AgoraRTC.default.createMicrophoneAudioTrack();
         localVideoTrackRef.current =
           await AgoraRTC.default.createCameraVideoTrack();
+
+        // Ensure local preview is visible for host when live
+        if (localVideoTrackRef.current && localVideoRef.current) {
+          localVideoTrackRef.current.play(localVideoRef.current);
+        }
 
         console.log("✅ Agora tracks created successfully");
       } catch (agoraError) {
@@ -535,7 +602,7 @@ export default function AgoraLivestream({
     }
   };
 
-  const stopStream = async () => {
+  const stopStream = useCallback(async () => {
     try {
       console.log("🛑 Stopping stream...");
 
@@ -582,11 +649,14 @@ export default function AgoraLivestream({
       onViewerCountChange?.(0);
       remoteUsersRef.current = [];
 
+      // Reset hasStartedPreview
+      setHasStartedPreview(false);
+
       console.log("✅ Stream stopped successfully");
     } catch (error) {
       console.error("❌ Error stopping stream:", error);
     }
-  };
+  }, [onViewerCountChange]);
 
   // Initialize on mount
   useEffect(() => {
@@ -596,7 +666,7 @@ export default function AgoraLivestream({
       isMountedRef.current = false;
       stopStream();
     };
-  }, []);
+  }, [stopStream]);
 
   // Monitor local stream for debugging
   useEffect(() => {
@@ -615,7 +685,7 @@ export default function AgoraLivestream({
         console.log("📹 Video track constraints:", videoTrack.getConstraints());
       }
     }
-  }, [isHost, localStreamRef.current]);
+  }, [isHost]);
 
   if (isLoading) {
     return (
@@ -678,28 +748,38 @@ export default function AgoraLivestream({
 
             {/* Video Container */}
             <div className="relative bg-black rounded-lg overflow-hidden">
-              {/* Local Video (Host Only) */}
-              {isHost && (
-                <div className="absolute top-4 left-4 z-10">
-                  <video
-                    ref={localVideoRef}
-                    autoPlay
-                    muted
-                    playsInline
-                    className="w-32 h-24 bg-gray-800 rounded-lg object-cover border-2 border-white"
-                    onLoadedMetadata={() =>
-                      console.log("🎥 Local video metadata loaded in preview")
-                    }
-                    onCanPlay={() =>
-                      console.log("🎥 Local video can play in preview")
-                    }
-                    onPlay={() =>
-                      console.log("🎥 Local video started playing in preview")
-                    }
-                    onError={(e) =>
-                      console.error("🎥 Local video error in preview:", e)
-                    }
-                  />
+              {/* Camera Preview (Host, before going live) */}
+              {isHost && !isStreaming && !hasStartedPreview && (
+                <div className="flex flex-col items-center justify-center h-80">
+                  <button
+                    onClick={async () => {
+                      setHasStartedPreview(true);
+                      setCameraLoading(true);
+                      try {
+                        const stream =
+                          await navigator.mediaDevices.getUserMedia({
+                            video: true,
+                            audio: true,
+                          });
+                        setCameraPreviewStream(stream);
+                        setCameraLoading(false);
+                        setCameraError(null);
+                        if (localVideoRef.current) {
+                          localVideoRef.current.srcObject = stream;
+                          localVideoRef.current.play().catch(() => {});
+                        }
+                      } catch {
+                        setCameraError("Camera or microphone access denied.");
+                        setCameraLoading(false);
+                      }
+                    }}
+                    className="px-6 py-3 rounded-full bg-blue-600 text-white font-medium shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-150"
+                  >
+                    Start Livestream
+                  </button>
+                  {cameraError && (
+                    <div className="mt-4 text-red-600">{cameraError}</div>
+                  )}
                 </div>
               )}
 
@@ -904,6 +984,38 @@ export default function AgoraLivestream({
     );
   }
 
+  // Show preview only after hasStartedPreview is true
+  if (isHost && !isStreaming && hasStartedPreview) {
+    return (
+      <div className="relative bg-black rounded-lg overflow-hidden">
+        {cameraLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          </div>
+        )}
+        {cameraError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-10">
+            <span className="text-white text-lg">{cameraError}</span>
+          </div>
+        )}
+        <video
+          ref={localVideoRef}
+          autoPlay
+          muted
+          playsInline
+          className="w-full h-96 object-cover rounded-lg"
+          style={{ background: "#222" }}
+        />
+        {!cameraLoading && !cameraError && !cameraPreviewStream && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-10">
+            <span className="text-white text-lg">No Stream</span>
+          </div>
+        )}
+        {/* Controls and info here */}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Stream Controls */}
@@ -933,32 +1045,37 @@ export default function AgoraLivestream({
 
       {/* Video Container */}
       <div className="relative bg-black rounded-lg overflow-hidden">
-        {/* Local Video (Host Only) */}
-        {isHost && (
-          <div className="absolute top-4 left-4 z-10">
-            <video
-              ref={localVideoRef}
-              autoPlay
-              muted
-              playsInline
-              className="w-32 h-24 bg-gray-800 rounded-lg object-cover border-2 border-white"
-              onLoadedMetadata={() =>
-                console.log("🎥 Local video metadata loaded in preview")
-              }
-              onCanPlay={() =>
-                console.log("🎥 Local video can play in preview")
-              }
-              onPlay={() =>
-                console.log("🎥 Local video started playing in preview")
-              }
-              onError={(e) =>
-                console.error("🎥 Local video error in preview:", e)
-              }
-            />
-            {/* Debug info */}
-            <div className="absolute -bottom-6 left-0 text-xs text-white bg-black bg-opacity-50 px-1 rounded">
-              {localStreamRef.current ? "📹 Active" : "❌ No Stream"}
-            </div>
+        {/* Camera Preview (Host, before going live) */}
+        {isHost && !isStreaming && !hasStartedPreview && (
+          <div className="flex flex-col items-center justify-center h-80">
+            <button
+              onClick={async () => {
+                setHasStartedPreview(true);
+                setCameraLoading(true);
+                try {
+                  const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true,
+                  });
+                  setCameraPreviewStream(stream);
+                  setCameraLoading(false);
+                  setCameraError(null);
+                  if (localVideoRef.current) {
+                    localVideoRef.current.srcObject = stream;
+                    localVideoRef.current.play().catch(() => {});
+                  }
+                } catch {
+                  setCameraError("Camera or microphone access denied.");
+                  setCameraLoading(false);
+                }
+              }}
+              className="px-6 py-3 rounded-full bg-blue-600 text-white font-medium shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-150"
+            >
+              Start Livestream
+            </button>
+            {cameraError && (
+              <div className="mt-4 text-red-600">{cameraError}</div>
+            )}
           </div>
         )}
 
@@ -997,58 +1114,93 @@ export default function AgoraLivestream({
         </div>
       </div>
 
-      {/* Controls (Host Only) */}
+      {/* Controls (Host Only, Responsive, Modern) */}
       {isHost && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex flex-wrap justify-center gap-3 mt-4 mb-2">
+          {/* Go Live / End Stream */}
+          {!isStreaming ? (
+            <button
+              onClick={startStream}
+              className="px-6 py-2 rounded-full bg-black text-white font-medium shadow hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black transition-all duration-150"
+            >
+              <span className="inline-flex items-center gap-2">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 12h14M12 5l7 7-7 7"
+                  />
+                </svg>
+                Go Live
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={stopStream}
+              className="px-6 py-2 rounded-full bg-red-600 text-white font-medium shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all duration-150"
+            >
+              <span className="inline-flex items-center gap-2">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+                End Stream
+              </span>
+            </button>
+          )}
+          {/* Mute/Unmute */}
           <button
             onClick={toggleAudio}
-            className={`flex items-center gap-1 px-3 py-2 rounded text-sm transition-colors ${
+            className={`px-4 py-2 rounded-full font-medium shadow focus:outline-none focus:ring-2 transition-all duration-150 ${
               isAudioEnabled
-                ? "bg-blue-600 text-white hover:bg-blue-700"
-                : "bg-red-600 text-white hover:bg-red-700"
+                ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-400"
+                : "bg-gray-300 text-gray-700 hover:bg-gray-400 focus:ring-gray-400"
             }`}
           >
-            {isAudioEnabled ? (
-              <Mic className="w-4 h-4" />
-            ) : (
-              <MicOff className="w-4 h-4" />
-            )}
             {isAudioEnabled ? "Mute" : "Unmute"}
           </button>
-
+          {/* Stop/Start Video */}
           <button
             onClick={toggleVideo}
-            className={`flex items-center gap-1 px-3 py-2 rounded text-sm transition-colors ${
+            className={`px-4 py-2 rounded-full font-medium shadow focus:outline-none focus:ring-2 transition-all duration-150 ${
               isVideoEnabled
-                ? "bg-blue-600 text-white hover:bg-blue-700"
-                : "bg-red-600 text-white hover:bg-red-700"
+                ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-400"
+                : "bg-gray-300 text-gray-700 hover:bg-gray-400 focus:ring-gray-400"
             }`}
           >
-            {isVideoEnabled ? (
-              <Video className="w-4 h-4" />
-            ) : (
-              <VideoOff className="w-4 h-4" />
-            )}
             {isVideoEnabled ? "Stop Video" : "Start Video"}
           </button>
-
+          {/* Share Screen */}
           <button
             onClick={toggleScreenSharing}
-            className={`flex items-center gap-1 px-3 py-2 rounded text-sm transition-colors ${
+            className={`px-4 py-2 rounded-full font-medium shadow focus:outline-none focus:ring-2 transition-all duration-150 ${
               isScreenSharing
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+                ? "bg-green-600 text-white hover:bg-green-700 focus:ring-green-400"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400"
             }`}
           >
-            <Monitor className="w-4 h-4" />
             {isScreenSharing ? "Stop Sharing" : "Share Screen"}
           </button>
-
+          {/* Refresh Camera */}
           <button
             onClick={refreshCamera}
-            className="flex items-center gap-1 px-3 py-2 rounded text-sm bg-gray-600 text-white hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-medium shadow hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-150"
           >
-            <Video className="w-4 h-4" />
             Refresh Camera
           </button>
         </div>

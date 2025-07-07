@@ -10,7 +10,16 @@ interface ILivestreamBody {
   scheduledAt: Date;
 }
 
-
+// Extended livestream interface with new real-time fields
+interface IExtendedLivestream extends Omit<ILivestream, '_id'> {
+  hostConnected?: boolean;
+  streamQuality?: 'good' | 'poor' | 'disconnected';
+  isScreenSharing?: boolean;
+  lastHeartbeat?: Date;
+  endedAt?: Date;
+  totalViewers?: number;
+  peakViewers?: number;
+}
 
 export async function POST(
   request: NextRequest,
@@ -35,19 +44,33 @@ export async function POST(
       .collection<IProject>("projects")
       .findOne({ slug: slug });
 
-    const newLivestream = {
+    if (!project?._id) {
+      return NextResponse.json({
+        message: "Project not found",
+        status: 404,
+      });
+    }
+
+    const newLivestream: IExtendedLivestream = {
       title,
-      channelName: channelName ? channelName : `stream - ${project?._id}`,
+      channelName: channelName ? channelName : `stream - ${project._id}`,
       description: description ? description : "-",
       scheduledAt,
       isLive: false,
       viewerCount: 0,
-      projectId: project?._id,
+      projectId: project._id,
       createdAt: new Date(),
       updatedAt: new Date(),
+      // New real-time fields with defaults
+      hostConnected: false,
+      streamQuality: 'good',
+      isScreenSharing: false,
+      lastHeartbeat: new Date(),
+      totalViewers: 0,
+      peakViewers: 0,
     };
 
-    const existedLs = await db.collection<ILivestream>("livestreams").findOne({
+    const existedLs = await db.collection<IExtendedLivestream>("livestreams").findOne({
       projectId: project?._id,
     });
     if (existedLs) {
@@ -131,7 +154,7 @@ export async function PATCH(
     }
 
     // Find the livestream for this project
-    const livestream = await db.collection<ILivestream>("livestreams").findOne({
+    const livestream = await db.collection<IExtendedLivestream>("livestreams").findOne({
       projectId: project._id,
     });
 
@@ -142,74 +165,132 @@ export async function PATCH(
       );
     }
 
-    // Parse request body to check if this is an early start
+    // Parse request body
+    let body = {};
     try {
-      const body = await request.text();
-      if (body) {
-        JSON.parse(body); // Parse to validate JSON, but we don't need the data for now
+      const bodyText = await request.text();
+      if (bodyText) {
+        body = JSON.parse(bodyText);
       }
     } catch {
-      // If no body or invalid JSON, continue with default behavior
       console.log("No request body or invalid JSON, using default start behavior");
     }
 
-    // Calculate if this is an early start
-    const now = new Date();
-    const scheduledTime = new Date(livestream.scheduledAt);
-    const isEarlyStart = now < scheduledTime;
+    // Check if this is a viewer count update or stream start
+    if (body && typeof body === 'object' && 'viewerCount' in body) {
+      // Viewer count update
+      const { viewerCount, hostConnected, streamQuality, isScreenSharing } = body as {
+        viewerCount?: number;
+        hostConnected?: boolean;
+        streamQuality?: string;
+        isScreenSharing?: boolean;
+      };
 
-    // Update livestream with new fields
-    await db.collection<ILivestream>("livestreams").updateOne(
-      { _id: livestream._id },
-      {
-        $set: {
-          isLive: true,
-          actualStartTime: new Date(),
-          startedEarly: isEarlyStart,
-          updatedAt: new Date(),
-        },
+      const updateData: Partial<IExtendedLivestream> = {
+        updatedAt: new Date(),
+        lastHeartbeat: new Date(),
+      };
+
+      if (viewerCount !== undefined) {
+        updateData.viewerCount = Math.max(0, viewerCount);
+        updateData.totalViewers = Math.max(livestream.totalViewers || 0, viewerCount);
+        updateData.peakViewers = Math.max(livestream.peakViewers || 0, viewerCount);
       }
-    );
 
-    // Keep existing project update unchanged
-    await db.collection<IProject>("projects").updateOne(
-      { _id: project._id },
-      {
-        $set: {
-          isLive: true,
-          updatedAt: new Date(),
-        },
+      if (hostConnected !== undefined) updateData.hostConnected = hostConnected;
+      if (streamQuality !== undefined) updateData.streamQuality = streamQuality as 'good' | 'poor' | 'disconnected';
+      if (isScreenSharing !== undefined) updateData.isScreenSharing = isScreenSharing;
+
+      await db.collection<IExtendedLivestream>("livestreams").updateOne(
+        { _id: livestream._id },
+        { $set: updateData }
+      );
+
+      // Trigger Pusher event for real-time updates
+      try {
+        await pusherServer.trigger(
+          `project-${slug}-livestream`,
+          'viewer-count-updated',
+          {
+            viewerCount: updateData.viewerCount || livestream.viewerCount,
+            hostConnected: updateData.hostConnected,
+            streamQuality: updateData.streamQuality,
+            isScreenSharing: updateData.isScreenSharing,
+          }
+        );
+      } catch (pusherError) {
+        console.error('Pusher error:', pusherError);
       }
-    );
 
-    // Trigger Pusher event for real-time updates
-    try {
-      await pusherServer.trigger(
-        `project-${slug}-livestream`,
-        'livestream-started',
+      return NextResponse.json({
+        success: true,
+        message: "Viewer count updated",
+        viewerCount: updateData.viewerCount || livestream.viewerCount,
+      });
+    } else {
+      // Stream start (existing behavior)
+      const now = new Date();
+      const scheduledTime = new Date(livestream.scheduledAt);
+      const isEarlyStart = now < scheduledTime;
+
+      // Update livestream with new fields
+      await db.collection<IExtendedLivestream>("livestreams").updateOne(
+        { _id: livestream._id },
         {
-          isLive: true,
-          actualStartTime: new Date(),
-          startedEarly: isEarlyStart,
-          channelName: livestream.channelName,
-          title: livestream.title
+          $set: {
+            isLive: true,
+            actualStartTime: new Date(),
+            startedEarly: isEarlyStart,
+            hostConnected: true,
+            streamQuality: 'good',
+            isScreenSharing: false,
+            lastHeartbeat: new Date(),
+            updatedAt: new Date(),
+          },
         }
       );
-      console.log('Pusher event triggered for livestream start:', slug);
-    } catch (pusherError) {
-      console.error('Pusher error:', pusherError);
-      // Don't fail the request if Pusher fails
-    }
 
-    return NextResponse.json({
-      success: true,
-      message: `Channel: ${livestream.channelName} started successfully`,
-      startedEarly: isEarlyStart,
-    });
+      // Keep existing project update unchanged
+      await db.collection<IProject>("projects").updateOne(
+        { _id: project._id },
+        {
+          $set: {
+            isLive: true,
+            updatedAt: new Date(),
+          },
+        }
+      );
+
+      // Trigger Pusher event for real-time updates
+      try {
+        await pusherServer.trigger(
+          `project-${slug}-livestream`,
+          'livestream-started',
+          {
+            isLive: true,
+            actualStartTime: new Date(),
+            startedEarly: isEarlyStart,
+            channelName: livestream.channelName,
+            title: livestream.title,
+            hostConnected: true,
+            streamQuality: 'good',
+          }
+        );
+        console.log('Pusher event triggered for livestream start:', slug);
+      } catch (pusherError) {
+        console.error('Pusher error:', pusherError);
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Channel: ${livestream.channelName} started successfully`,
+        startedEarly: isEarlyStart,
+      });
+    }
   } catch (error) {
-    console.error("Error starting livestream:", error);
+    console.error("Error updating livestream:", error);
     return NextResponse.json(
-      { error: "Failed to start livestream" },
+      { error: "Failed to update livestream" },
       { status: 500 }
     );
   }

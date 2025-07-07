@@ -50,6 +50,7 @@ export default function LivestreamSection({
   const [isStreaming, setIsStreaming] = useState(false);
   const [timeUntilStream, setTimeUntilStream] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Fetch livestream data
   const fetchLivestreamData = useCallback(async () => {
@@ -96,6 +97,8 @@ export default function LivestreamSection({
         startedEarly: boolean;
         channelName: string;
         title: string;
+        hostConnected: boolean;
+        streamQuality: string;
       }) => {
         console.log("Livestream started via Pusher:", data);
         setIsStreaming(true);
@@ -132,6 +135,31 @@ export default function LivestreamSection({
         );
       }
     });
+
+    // New: Real-time viewer count updates
+    channel.bind(
+      "viewer-count-updated",
+      (data: {
+        viewerCount: number;
+        hostConnected: boolean;
+        streamQuality: string;
+        isScreenSharing: boolean;
+      }) => {
+        console.log("Viewer count updated via Pusher:", data);
+
+        // Update livestream data with real-time info
+        if (livestream) {
+          setLivestream((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  viewerCount: data.viewerCount,
+                }
+              : null
+          );
+        }
+      }
+    );
 
     return () => {
       pusherClient.unsubscribe(`project-${projectSlug}-livestream`);
@@ -198,14 +226,77 @@ export default function LivestreamSection({
   // Render logic based on state
   if (isStreaming) {
     return (
-      <Suspense fallback={<div>Loading AgoraLivestream...</div>}>
-        <AgoraLivestream
-          isHost={isOwner}
-          userId={userId}
-          userName={userName}
-          channelName={livestream?.channelName || ""}
-        />
-      </Suspense>
+      <div className="space-y-4">
+        {/* Unified Status Bar */}
+        <div className="flex items-center justify-between px-4 py-2 rounded-t-lg bg-green-50 border-b border-green-200 mb-0">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded-full">LIVE</span>
+            <span className="text-gray-700 text-sm flex items-center gap-1">
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A2 2 0 0020 6.382V5a2 2 0 00-2-2H6a2 2 0 00-2 2v1.382a2 2 0 00.447 1.342L9 10m6 0v4m0 0l-3 3m3-3l3 3m-3-3H9" /></svg>
+              {livestream?.viewerCount || 0} watching
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+            <span className="text-xs text-green-700 font-medium">Connected</span>
+          </div>
+        </div>
+
+        {/* Video Area with Responsive Layout and Loading Spinner */}
+        <div className="relative w-full max-w-3xl mx-auto aspect-video bg-black rounded-xl shadow-lg overflow-hidden flex items-center justify-center transition-all duration-300">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            </div>
+          )}
+          {/* Video or Placeholder */}
+          <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-10"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div></div>}>
+            <AgoraLivestream
+              isHost={isOwner}
+              userId={userId}
+              userName={userName}
+              channelName={livestream?.channelName || ""}
+              projectSlug={projectSlug}
+            />
+          </Suspense>
+        </div>
+
+        {/* Controls Section - Responsive */}
+        <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4 mt-4">
+          {/* Controls will be rendered by AgoraLivestream, but you can add extra host controls here if needed */}
+        </div>
+
+        {/* Details Panel - Collapsible, Responsive */}
+        <div className="w-full max-w-3xl mx-auto mt-6">
+          <div className="bg-white/80 dark:bg-gray-900/80 rounded-lg shadow p-4 transition-all duration-300">
+            <button
+              onClick={() => setDetailsOpen(!detailsOpen)}
+              className="w-full flex items-center justify-between px-2 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-150"
+            >
+              <span className="font-semibold text-lg">Stream Details</span>
+              <svg className={`w-5 h-5 transform transition-transform duration-200 ${detailsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {detailsOpen && (
+              <div className="mt-3 text-gray-700 dark:text-gray-200 text-sm transition-all duration-200">
+                <div className="text-base font-medium text-black">{livestream ? livestream.title : '-'}</div>
+                <div className="text-sm text-gray-600 flex items-center gap-2">
+                  {livestream ? (
+                    <>
+                      <span>Status: {livestream.isLive ? 'Live' : 'Offline'}</span>
+                      <span>Viewers: {livestream.viewerCount}</span>
+                    </>
+                  ) : (
+                    <span>Loading stream details...</span>
+                  )}
+                </div>
+                <div className="text-sm text-gray-700 line-clamp-2">
+                  {livestream?.description}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -223,6 +314,16 @@ export default function LivestreamSection({
           <p className="text-blue-700 font-normal">
             &quot;{livestream.title}&quot; by {userName}
           </p>
+
+          {/* Real-time viewer count */}
+          <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-blue-800">
+                {livestream.viewerCount || 0} waiting to join
+              </span>
+            </div>
+          </div>
 
           {canStartStream && isOwner && (
             <div className="mt-4">
