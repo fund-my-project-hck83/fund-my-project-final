@@ -10,17 +10,6 @@ interface ILivestreamBody {
   scheduledAt: Date;
 }
 
-// Extended livestream interface with new real-time fields
-interface IExtendedLivestream extends Omit<ILivestream, '_id'> {
-  hostConnected?: boolean;
-  streamQuality?: 'good' | 'poor' | 'disconnected';
-  isScreenSharing?: boolean;
-  lastHeartbeat?: Date;
-  endedAt?: Date;
-  totalViewers?: number;
-  peakViewers?: number;
-}
-
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -51,7 +40,7 @@ export async function POST(
       });
     }
 
-    const newLivestream: IExtendedLivestream = {
+    const newLivestream: Omit<ILivestream, '_id'> = {
       title,
       channelName: channelName ? channelName : `stream - ${project._id}`,
       description: description ? description : "-",
@@ -61,16 +50,9 @@ export async function POST(
       projectId: project._id,
       createdAt: new Date(),
       updatedAt: new Date(),
-      // New real-time fields with defaults
-      hostConnected: false,
-      streamQuality: 'good',
-      isScreenSharing: false,
-      lastHeartbeat: new Date(),
-      totalViewers: 0,
-      peakViewers: 0,
     };
 
-    const existedLs = await db.collection<IExtendedLivestream>("livestreams").findOne({
+    const existedLs = await db.collection<ILivestream>("livestreams").findOne({
       projectId: project?._id,
     });
     if (existedLs) {
@@ -154,7 +136,7 @@ export async function PATCH(
     }
 
     // Find the livestream for this project
-    const livestream = await db.collection<IExtendedLivestream>("livestreams").findOne({
+    const livestream = await db.collection<ILivestream>("livestreams").findOne({
       projectId: project._id,
     });
 
@@ -178,44 +160,31 @@ export async function PATCH(
 
     // Check if this is a viewer count update or stream start
     if (body && typeof body === 'object' && 'viewerCount' in body) {
-      // Viewer count update
-      const { viewerCount, hostConnected, streamQuality, isScreenSharing } = body as {
+      // Viewer count update - simplified
+      const { viewerCount } = body as {
         viewerCount?: number;
-        hostConnected?: boolean;
-        streamQuality?: string;
-        isScreenSharing?: boolean;
       };
 
-      const updateData: Partial<IExtendedLivestream> = {
+      const updateData: Partial<ILivestream> = {
         updatedAt: new Date(),
-        lastHeartbeat: new Date(),
       };
 
       if (viewerCount !== undefined) {
         updateData.viewerCount = Math.max(0, viewerCount);
-        updateData.totalViewers = Math.max(livestream.totalViewers || 0, viewerCount);
-        updateData.peakViewers = Math.max(livestream.peakViewers || 0, viewerCount);
       }
 
-      if (hostConnected !== undefined) updateData.hostConnected = hostConnected;
-      if (streamQuality !== undefined) updateData.streamQuality = streamQuality as 'good' | 'poor' | 'disconnected';
-      if (isScreenSharing !== undefined) updateData.isScreenSharing = isScreenSharing;
-
-      await db.collection<IExtendedLivestream>("livestreams").updateOne(
+      await db.collection<ILivestream>("livestreams").updateOne(
         { _id: livestream._id },
         { $set: updateData }
       );
 
-      // Trigger Pusher event for real-time updates
+      // Simplified Pusher event
       try {
         await pusherServer.trigger(
           `project-${slug}-livestream`,
           'viewer-count-updated',
           {
             viewerCount: updateData.viewerCount || livestream.viewerCount,
-            hostConnected: updateData.hostConnected,
-            streamQuality: updateData.streamQuality,
-            isScreenSharing: updateData.isScreenSharing,
           }
         );
       } catch (pusherError) {
@@ -228,23 +197,19 @@ export async function PATCH(
         viewerCount: updateData.viewerCount || livestream.viewerCount,
       });
     } else {
-      // Stream start (existing behavior)
+      // Stream start - simplified
       const now = new Date();
       const scheduledTime = new Date(livestream.scheduledAt);
       const isEarlyStart = now < scheduledTime;
 
-      // Update livestream with new fields
-      await db.collection<IExtendedLivestream>("livestreams").updateOne(
+      // Update livestream with essential fields only
+      await db.collection<ILivestream>("livestreams").updateOne(
         { _id: livestream._id },
         {
           $set: {
             isLive: true,
             actualStartTime: new Date(),
             startedEarly: isEarlyStart,
-            hostConnected: true,
-            streamQuality: 'good',
-            isScreenSharing: false,
-            lastHeartbeat: new Date(),
             updatedAt: new Date(),
           },
         }
@@ -261,7 +226,7 @@ export async function PATCH(
         }
       );
 
-      // Trigger Pusher event for real-time updates
+      // Simplified Pusher event
       try {
         await pusherServer.trigger(
           `project-${slug}-livestream`,
@@ -272,8 +237,6 @@ export async function PATCH(
             startedEarly: isEarlyStart,
             channelName: livestream.channelName,
             title: livestream.title,
-            hostConnected: true,
-            streamQuality: 'good',
           }
         );
         console.log('Pusher event triggered for livestream start:', slug);
