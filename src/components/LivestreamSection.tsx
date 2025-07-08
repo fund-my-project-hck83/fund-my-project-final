@@ -88,11 +88,8 @@ export default function LivestreamSection({
       "livestream-started",
       (data: {
         isLive: boolean;
-        actualStartTime: Date;
-        startedEarly: boolean;
         channelName: string;
         title: string;
-        // Removed hostConnected, streamQuality - not needed
       }) => {
         console.log("Livestream started via Pusher:", data);
         setIsStreaming(true);
@@ -104,8 +101,6 @@ export default function LivestreamSection({
               ? {
                   ...prev,
                   isLive: data.isLive,
-                  actualStartTime: data.actualStartTime,
-                  startedEarly: data.startedEarly,
                 }
               : null
           );
@@ -130,12 +125,11 @@ export default function LivestreamSection({
       }
     });
 
-    // Simplified real-time viewer count updates
+    // Real-time viewer count updates
     channel.bind(
       "viewer-count-updated",
       (data: {
         viewerCount: number;
-        // Removed hostConnected, streamQuality, isScreenSharing - not needed
       }) => {
         console.log("Viewer count updated via Pusher:", data);
 
@@ -173,31 +167,31 @@ export default function LivestreamSection({
     }
   }, [livestream, isStreaming]);
 
-  const canStartStream = timeUntilStream <= 2 * 60 * 60 * 1000; // 2 hours in ms
-  const isStreamTime = timeUntilStream <= 0;
+  // Simplified logic - always allow starting if owner
 
-  // Handle early start
-  const handleStartStreamEarly = async () => {
-    if (!isOwner || !canStartStream) return;
+  // Handle start stream
+  const handleStartStream = async () => {
+    if (!isOwner) return;
 
     try {
-      const response = await fetch(`/api/livestreams/project/${projectSlug}`, {
-        method: "PATCH",
+      const response = await fetch(`/api/livestreams/project/${projectSlug}/start`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ startedEarly: true }),
       });
 
       if (response.ok) {
-        const result = await response.json();
-        console.log("Stream started early:", result);
-        // The Pusher event will handle updating the UI
+        // Optimistically update state to show AgoraLivestream immediately
+        setIsStreaming(true);
+        setLivestream((prev) =>
+          prev ? { ...prev, isLive: true } : prev
+        );
       } else {
-        console.error("Failed to start stream early");
+        console.error("Failed to start stream");
       }
     } catch (error) {
-      console.error("Error starting stream early:", error);
+      console.error("Error starting stream:", error);
     }
   };
 
@@ -218,64 +212,22 @@ export default function LivestreamSection({
   // Render logic based on state
   if (isStreaming) {
     return (
-      <div className="space-y-4">
-        {/* Unified Status Bar */}
-        <div className="flex items-center justify-between px-4 py-2 rounded-t-lg bg-green-50 border-b border-green-200 mb-0">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded-full">
-              LIVE
-            </span>
-            <span className="text-gray-700 text-sm flex items-center gap-1">
-              <svg
-                className="w-4 h-4 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 10l4.553-2.276A2 2 0 0020 6.382V5a2 2 0 00-2-2H6a2 2 0 00-2 2v1.382a2 2 0 00.447 1.342L9 10m6 0v4m0 0l-3 3m3-3l3 3m-3-3H9"
-                />
-              </svg>
-              {livestream?.viewerCount || 0} watching
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-            <span className="text-xs text-green-700 font-medium">
-              Connected
-            </span>
-          </div>
-        </div>
-
-        {/* Video Area - Simplified */}
-        <div className="relative w-full max-w-3xl mx-auto aspect-video bg-black rounded-xl shadow-lg overflow-hidden">
-          <Suspense
-            fallback={
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-10">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-              </div>
-            }
-          >
-            <AgoraLivestream
-              isHost={isOwner}
-              userId={userId}
-              userName={userName}
-              channelName={livestream?.channelName || ""}
-              projectSlug={projectSlug}
-            />
-          </Suspense>
-        </div>
-      </div>
+      <Suspense fallback={<div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div></div>}>
+        <AgoraLivestream
+          isHost={isOwner}
+          userId={userId}
+          userName={userName}
+          channelName={livestream?.channelName || ""}
+          projectSlug={projectSlug}
+        />
+      </Suspense>
     );
   }
 
-  if (livestream && !isStreamTime) {
+  if (livestream && !isStreaming) {
     return (
       <div className="space-y-4">
-        {/* Countdown Display */}
+        {/* Scheduled Livestream Display */}
         <div className="bg-blue-50 border border-blue-300 p-6 rounded-lg text-center">
           <h3 className="text-lg font-medium text-blue-900 mb-2">
             Livestream Scheduled
@@ -297,16 +249,16 @@ export default function LivestreamSection({
             </div>
           </div>
 
-          {canStartStream && isOwner && (
+          {isOwner && (
             <div className="mt-4">
               <button
-                onClick={handleStartStreamEarly}
+                onClick={handleStartStream}
                 className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors font-normal"
               >
                 Start Stream Now
               </button>
               <p className="text-xs text-blue-600 mt-2 font-normal">
-                💡 You can start early and viewers will join immediately
+                💡 Click to start your livestream immediately
               </p>
             </div>
           )}

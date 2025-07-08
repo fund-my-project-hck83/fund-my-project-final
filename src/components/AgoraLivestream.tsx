@@ -57,6 +57,7 @@ export default function AgoraLivestream({
   const localStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const isMountedRef = useRef(true);
+  const isStoppingRef = useRef(false);
 
   // Agora refs
   const agoraClientRef = useRef<AgoraClientType | null>(null);
@@ -72,24 +73,7 @@ export default function AgoraLivestream({
     uid: userId,
   };
 
-  // Update viewer count in database
-  const updateViewerCount = async (newCount: number) => {
-    try {
-      const response = await fetch(`/api/livestreams/project/${projectSlug}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ viewerCount: newCount }),
-      });
-
-      if (response.ok) {
-        console.log("✅ Viewer count updated:", newCount);
-      } else {
-        console.error("❌ Failed to update viewer count");
-      }
-    } catch (error) {
-      console.error("❌ Error updating viewer count:", error);
-    }
-  };
+  const [isRemoteVideoActive, setIsRemoteVideoActive] = useState(false);
 
   // Initialize Agora client
   const initializeAgoraClient = async () => {
@@ -137,16 +121,11 @@ export default function AgoraLivestream({
 
       if (mediaType === "video" && videoRef.current) {
         user.videoTrack?.play(videoRef.current);
+        setIsRemoteVideoActive(true);
       }
       if (mediaType === "audio") {
         user.audioTrack?.play();
       }
-
-      // Update viewer count
-      const newViewerCount = remoteUsersRef.current.length + 1;
-      setViewerCount(newViewerCount);
-      onViewerCountChange?.(newViewerCount);
-      await updateViewerCount(newViewerCount);
     } catch (error) {
       console.error("❌ Failed to subscribe to user:", error);
     }
@@ -156,11 +135,7 @@ export default function AgoraLivestream({
   const handleUserUnpublished = (user: AgoraUserType) => {
     console.log("🔇 User unpublished:", user.uid);
     remoteUsersRef.current = remoteUsersRef.current.filter((u) => u.uid !== user.uid);
-    
-    const newViewerCount = Math.max(0, remoteUsersRef.current.length);
-    setViewerCount(newViewerCount);
-    onViewerCountChange?.(newViewerCount);
-    updateViewerCount(newViewerCount);
+    setIsRemoteVideoActive(false);
   };
 
   // Handle user joined
@@ -168,21 +143,22 @@ export default function AgoraLivestream({
     console.log("👋 User joined:", user.uid);
     remoteUsersRef.current.push(user);
     
+    // Update local viewer count for display
     const newViewerCount = remoteUsersRef.current.length;
     setViewerCount(newViewerCount);
     onViewerCountChange?.(newViewerCount);
-    updateViewerCount(newViewerCount);
   };
 
   // Handle user left
   const handleUserLeft = (user: AgoraUserType) => {
     console.log("👋 User left:", user.uid);
     remoteUsersRef.current = remoteUsersRef.current.filter((u) => u.uid !== user.uid);
+    setIsRemoteVideoActive(false);
     
+    // Update local viewer count for display
     const newViewerCount = Math.max(0, remoteUsersRef.current.length);
     setViewerCount(newViewerCount);
     onViewerCountChange?.(newViewerCount);
-    updateViewerCount(newViewerCount);
   };
 
   // Join channel
@@ -306,12 +282,22 @@ export default function AgoraLivestream({
     }
   };
 
-  // Stop stream
+  // Stop stream (only called on explicit user action)
   const stopStream = useCallback(async () => {
-    try {
-      console.log("🛑 Stopping stream...");
+    // Prevent multiple stop calls
+    if (isStoppingRef.current) return;
+    isStoppingRef.current = true;
 
-      // Stop local tracks
+    try {
+      // Update database only if host explicitly ends stream
+      if (isHost) {
+        await fetch(`/api/livestreams/project/${projectSlug}/stop`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      // Cleanup Agora resources
       if (localAudioTrackRef.current) {
         localAudioTrackRef.current.close();
         localAudioTrackRef.current = null;
@@ -320,41 +306,33 @@ export default function AgoraLivestream({
         localVideoTrackRef.current.close();
         localVideoTrackRef.current = null;
       }
-
-      // Stop screen sharing
       if (screenStreamRef.current) {
         screenStreamRef.current.getTracks().forEach((track) => track.stop());
         screenStreamRef.current = null;
       }
-
-      // Stop local stream
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => track.stop());
         localStreamRef.current = null;
       }
-
-      // Clear video element
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
-
-      // Leave channel
       if (agoraClientRef.current) {
         await agoraClientRef.current.leave();
         agoraClientRef.current = null;
       }
 
-      // Reset state
+      // Reset UI state
       setStreamState("idle");
       setViewerCount(0);
       onViewerCountChange?.(0);
       remoteUsersRef.current = [];
-
-      console.log("✅ Stream stopped successfully");
     } catch (error) {
       console.error("❌ Error stopping stream:", error);
+    } finally {
+      isStoppingRef.current = false;
     }
-  }, [onViewerCountChange]);
+  }, [onViewerCountChange, isHost, projectSlug]);
 
   // Host controls
   const toggleAudio = async () => {
@@ -451,13 +429,35 @@ export default function AgoraLivestream({
     }
   };
 
-  // Initialize on mount
+  // Cleanup Agora resources on unmount (no database changes)
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
-      stopStream();
+      
+      // Only cleanup Agora resources, don't change database state
+      if (agoraClientRef.current) {
+        agoraClientRef.current.leave().catch(console.error);
+      }
+      
+      // Stop local tracks
+      if (localAudioTrackRef.current) {
+        localAudioTrackRef.current.close();
+      }
+      if (localVideoTrackRef.current) {
+        localVideoTrackRef.current.close();
+      }
+      
+      // Stop screen sharing
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      
+      // Stop local stream
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
     };
-  }, [stopStream]);
+  }, []); // No dependencies to prevent re-runs
 
   // Render based on stream state
   if (streamState === "connecting") {
@@ -547,7 +547,7 @@ export default function AgoraLivestream({
             </div>
             <div className="flex items-center gap-1 text-gray-600">
               <Users className="w-4 h-4" />
-              <span>{viewerCount} viewers</span>
+              <span>{isHost ? `${viewerCount} viewers` : "Connected"}</span>
             </div>
           </div>
           {isHost ? (
@@ -591,7 +591,7 @@ export default function AgoraLivestream({
           </div>
 
           {/* Viewer placeholder */}
-          {!isHost && !videoRef.current?.srcObject && (
+          {!isHost && !isRemoteVideoActive && (
             <div className="absolute inset-0 flex items-center justify-center text-white">
               <div className="text-center">
                 <Video className="w-16 h-16 mx-auto mb-4 opacity-50" />
@@ -602,6 +602,13 @@ export default function AgoraLivestream({
               </div>
             </div>
           )}
+
+          {/* Watermark */}
+          <div className="absolute bottom-2 right-4 z-20 pointer-events-none select-none">
+            <span className="bg-black bg-opacity-60 text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide shadow">
+              FundMyProject
+            </span>
+          </div>
         </div>
 
         {/* Host Controls */}

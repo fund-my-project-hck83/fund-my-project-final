@@ -1,7 +1,6 @@
 import { ILivestream, IProject } from "@/interfaces/interfaces";
 import { getDb } from "@/server/config/mongodb";
 import { NextRequest, NextResponse } from "next/server";
-import { pusherServer } from "@/lib/pusher";
 
 interface ILivestreamBody {
   title: string;
@@ -148,108 +147,27 @@ export async function PATCH(
     }
 
     // Parse request body
-    let body = {};
-    try {
-      const bodyText = await request.text();
-      if (bodyText) {
-        body = JSON.parse(bodyText);
-      }
-    } catch {
-      console.log("No request body or invalid JSON, using default start behavior");
-    }
+    const body = await request.json();
+    const { title, description, scheduledAt } = body;
 
-    // Check if this is a viewer count update or stream start
-    if (body && typeof body === 'object' && 'viewerCount' in body) {
-      // Viewer count update - simplified
-      const { viewerCount } = body as {
-        viewerCount?: number;
-      };
+    // Only allow updating basic livestream info
+    const updateData: Partial<ILivestream> = {
+      updatedAt: new Date(),
+    };
 
-      const updateData: Partial<ILivestream> = {
-        updatedAt: new Date(),
-      };
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (scheduledAt !== undefined) updateData.scheduledAt = new Date(scheduledAt);
 
-      if (viewerCount !== undefined) {
-        updateData.viewerCount = Math.max(0, viewerCount);
-      }
+    await db.collection<ILivestream>("livestreams").updateOne(
+      { _id: livestream._id },
+      { $set: updateData }
+    );
 
-      await db.collection<ILivestream>("livestreams").updateOne(
-        { _id: livestream._id },
-        { $set: updateData }
-      );
-
-      // Simplified Pusher event
-      try {
-        await pusherServer.trigger(
-          `project-${slug}-livestream`,
-          'viewer-count-updated',
-          {
-            viewerCount: updateData.viewerCount || livestream.viewerCount,
-          }
-        );
-      } catch (pusherError) {
-        console.error('Pusher error:', pusherError);
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: "Viewer count updated",
-        viewerCount: updateData.viewerCount || livestream.viewerCount,
-      });
-    } else {
-      // Stream start - simplified
-      const now = new Date();
-      const scheduledTime = new Date(livestream.scheduledAt);
-      const isEarlyStart = now < scheduledTime;
-
-      // Update livestream with essential fields only
-      await db.collection<ILivestream>("livestreams").updateOne(
-        { _id: livestream._id },
-        {
-          $set: {
-            isLive: true,
-            actualStartTime: new Date(),
-            startedEarly: isEarlyStart,
-            updatedAt: new Date(),
-          },
-        }
-      );
-
-      // Keep existing project update unchanged
-      await db.collection<IProject>("projects").updateOne(
-        { _id: project._id },
-        {
-          $set: {
-            isLive: true,
-            updatedAt: new Date(),
-          },
-        }
-      );
-
-      // Simplified Pusher event
-      try {
-        await pusherServer.trigger(
-          `project-${slug}-livestream`,
-          'livestream-started',
-          {
-            isLive: true,
-            actualStartTime: new Date(),
-            startedEarly: isEarlyStart,
-            channelName: livestream.channelName,
-            title: livestream.title,
-          }
-        );
-        console.log('Pusher event triggered for livestream start:', slug);
-      } catch (pusherError) {
-        console.error('Pusher error:', pusherError);
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: `Channel: ${livestream.channelName} started successfully`,
-        startedEarly: isEarlyStart,
-      });
-    }
+    return NextResponse.json({
+      success: true,
+      message: "Livestream updated successfully",
+    });
   } catch (error) {
     console.error("Error updating livestream:", error);
     return NextResponse.json(

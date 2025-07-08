@@ -152,8 +152,6 @@ export interface ILivestream {
   isLive: boolean;
   viewerCount: number;
   channelName: string;
-  actualStartTime?: Date;
-  startedEarly?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
