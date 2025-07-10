@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
-import { Video } from "lucide-react";
+import { Video, Edit, X } from "lucide-react";
 import { ILivestream } from "@/interfaces/interfaces";
 import ScheduleLivestream from "@/components/ScheduleLivestream";
 import { pusherClient } from "@/lib/pusher";
@@ -18,9 +18,12 @@ interface LivestreamSectionProps {
   isLoggedIn: boolean;
 }
 
+// Simplified livestream states
+type LivestreamState = "no-stream" | "scheduled" | "live";
+
 // Helper functions
 function formatCountdown(milliseconds: number): string {
-  if (milliseconds <= 0) return "Time has passed";
+  if (milliseconds <= 0) return "Ready to start";
 
   const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
   const hours = Math.floor(
@@ -35,6 +38,12 @@ function formatCountdown(milliseconds: number): string {
   return `${seconds}s`;
 }
 
+function getStreamState(livestream: ILivestream | null): LivestreamState {
+  if (!livestream) return "no-stream";
+  if (livestream.isLive) return "live";
+  return "scheduled";
+}
+
 export default function LivestreamSection({
   projectSlug,
   isOwner,
@@ -44,9 +53,9 @@ export default function LivestreamSection({
 }: LivestreamSectionProps) {
   const [livestream, setLivestream] = useState<ILivestream | null>(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [timeUntilStream, setTimeUntilStream] = useState<number>(0);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [countdown, setCountdown] = useState(0);
 
   // Fetch livestream data
   const fetchLivestreamData = useCallback(async () => {
@@ -57,13 +66,8 @@ export default function LivestreamSection({
       if (response.ok) {
         const data: ILivestream = await response.json();
         setLivestream(data);
-
-        // If stream is already live, set streaming state
-        if (data.isLive) {
-          setIsStreaming(true);
-        }
       } else {
-        // No livestream found, which is fine
+        // No livestream found or expired
         setLivestream(null);
       }
     } catch (error) {
@@ -73,6 +77,23 @@ export default function LivestreamSection({
       setLoading(false);
     }
   }, [projectSlug]);
+
+  // Update countdown every second for scheduled streams
+  useEffect(() => {
+    if (livestream && !livestream.isLive) {
+      const interval = setInterval(() => {
+        const now = new Date().getTime();
+        const scheduledTime = new Date(livestream.scheduledAt).getTime();
+        const timeLeft = scheduledTime - now;
+        setCountdown(timeLeft);
+
+        // Don't auto-refresh when countdown reaches 0
+        // Let the user manually start or let auto-delete handle expired streams
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [livestream]);
 
   // Fetch livestream data on mount
   useEffect(() => {
@@ -89,17 +110,11 @@ export default function LivestreamSection({
       "livestream-started",
       (data: { isLive: boolean; channelName: string; title: string }) => {
         console.log("Livestream started via Pusher:", data);
-        setIsStreaming(true);
-
-        // Update livestream data if we have it
+        
+        // Update livestream data
         if (livestream) {
           setLivestream((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  isLive: data.isLive,
-                }
-              : null
+            prev ? { ...prev, isLive: data.isLive } : null
           );
         }
       }
@@ -107,21 +122,15 @@ export default function LivestreamSection({
 
     channel.bind("livestream-stopped", (data: { isLive: boolean; livestreamDeleted?: boolean }) => {
       console.log("Livestream stopped via Pusher:", data);
-      setIsStreaming(false);
-
+      
       // If livestream was deleted, clear the livestream data
       if (data.livestreamDeleted) {
         setLivestream(null);
       } else {
-        // Update livestream data if we have it
+        // Update livestream data
         if (livestream) {
           setLivestream((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  isLive: false,
-                }
-              : null
+            prev ? { ...prev, isLive: false } : null
           );
         }
       }
@@ -131,15 +140,9 @@ export default function LivestreamSection({
     channel.bind("viewer-count-updated", (data: { viewerCount: number }) => {
       console.log("Viewer count updated via Pusher:", data);
 
-      // Update livestream data with real-time info
       if (livestream) {
         setLivestream((prev) =>
-          prev
-            ? {
-                ...prev,
-                viewerCount: data.viewerCount,
-              }
-            : null
+          prev ? { ...prev, viewerCount: data.viewerCount } : null
         );
       }
     });
@@ -149,29 +152,7 @@ export default function LivestreamSection({
     };
   }, [projectSlug, livestream]);
 
-  // Countdown timer
-  useEffect(() => {
-    if (livestream && !isStreaming) {
-      const timer = setInterval(() => {
-        const now = new Date().getTime();
-        const streamTime = new Date(livestream.scheduledAt).getTime();
-        const timeLeft = streamTime - now;
-
-        // Only update if time hasn't passed (prevent negative values)
-        if (timeLeft > 0) {
-          setTimeUntilStream(timeLeft);
-        } else {
-          setTimeUntilStream(0);
-        }
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [livestream, isStreaming]);
-
-  // Simplified logic - always allow starting if owner
-
-  // Handle start stream
+  // Handle actions
   const handleStartStream = async () => {
     if (!isOwner) return;
 
@@ -180,204 +161,242 @@ export default function LivestreamSection({
         `/api/livestreams/project/${projectSlug}/start`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
 
       if (response.ok) {
-        // Optimistically update state to show AgoraLivestream immediately
-        setIsStreaming(true);
+        // State will be updated via Pusher
         setLivestream((prev) => (prev ? { ...prev, isLive: true } : prev));
       } else {
         const errorData = await response.json();
         console.error("Failed to start stream:", errorData.error);
-        
-        // If scheduled time has passed, clear the livestream to force rescheduling
-        if (errorData.error?.includes("Scheduled time has passed")) {
-          setLivestream(null);
-        }
+        alert(errorData.error || "Failed to start stream");
       }
     } catch (error) {
       console.error("Error starting stream:", error);
+      alert("Failed to start stream");
+    }
+  };
+
+  const handleCancelStream = async () => {
+    if (!isOwner || !livestream) return;
+
+    if (confirm("Are you sure you want to cancel this livestream?")) {
+      try {
+        const response = await fetch(`/api/livestreams/project/${projectSlug}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          setLivestream(null);
+        } else {
+          const errorData = await response.json();
+          alert(errorData.error || "Failed to cancel stream");
+        }
+      } catch (error) {
+        console.error("Error cancelling stream:", error);
+        alert("Failed to cancel stream");
+      }
     }
   };
 
   // Loading state
   if (loading) {
-    return <LoadingSpinner message="Loading project information..." />;
+    return <LoadingSpinner message="Loading livestream..." />;
   }
 
-  // Render logic based on state
-  if (isStreaming) {
-    return (
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-          </div>
-        }
-      >
-        <AgoraLivestream
-          isHost={isOwner}
-          userId={userId}
-          userName={userName}
-          channelName={livestream?.channelName || ""}
-          projectSlug={projectSlug}
-        />
-      </Suspense>
-    );
-  }
+  const streamState = getStreamState(livestream);
 
-  if (livestream && !isStreaming) {
-    // Check if scheduled time has passed
-    const now = new Date();
-    const scheduledTime = new Date(livestream.scheduledAt);
-    const hasExpired = scheduledTime < now;
-
-    return (
-      <div className="space-y-4">
-        {/* Scheduled Livestream Display */}
-        <div className={`border p-6 rounded-lg text-center ${
-          hasExpired 
-            ? "bg-red-50 border-red-300" 
-            : "bg-blue-50 border-blue-300"
-        }`}>
-          <h3 className={`text-lg font-medium mb-2 ${
-            hasExpired ? "text-red-900" : "text-blue-900"
-          }`}>
-            {hasExpired ? "Livestream Expired" : "Livestream Scheduled"}
-          </h3>
-          <div className={`text-2xl font-medium mb-2 ${
-            hasExpired ? "text-red-600" : "text-blue-600"
-          }`}>
-            {hasExpired ? "Time has passed" : formatCountdown(timeUntilStream)}
-          </div>
-          <p className={`font-normal ${
-            hasExpired ? "text-red-700" : "text-blue-700"
-          }`}>
-            &quot;{livestream.title}&quot; by {userName}
-          </p>
-
-          {/* Real-time viewer count */}
-          <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-blue-800">
-                {livestream.viewerCount || 0} waiting to join
-              </span>
+  // Render based on simplified states
+  switch (streamState) {
+    case "live":
+      return (
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
             </div>
-          </div>
+          }
+        >
+          <AgoraLivestream
+            isHost={isOwner}
+            userId={userId}
+            userName={userName}
+            channelName={livestream?.channelName || ""}
+            projectSlug={projectSlug}
+          />
+        </Suspense>
+      );
 
-          {isOwner && (
-            <div className="mt-4">
-              {hasExpired ? (
-                <div>
-                  <p className="text-sm text-red-600 mb-3 font-normal">
-                    The scheduled time has passed. Please reschedule your livestream.
-                  </p>
-                  <button
-                    onClick={() => setShowScheduleModal(true)}
-                    className="bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700 transition-colors font-normal"
-                  >
-                    Reschedule Livestream
-                  </button>
-                </div>
-              ) : (
-                <div>
+    case "scheduled":
+      return (
+        <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-300 p-6 rounded-lg text-center">
+            <h3 className="text-lg font-medium text-blue-900 mb-2">
+              Livestream Scheduled
+            </h3>
+            <div className={`text-2xl font-medium mb-2 ${
+              countdown <= 0 ? "text-green-600" : "text-blue-600"
+            }`}>
+              {formatCountdown(countdown)}
+            </div>
+            <p className="text-blue-700 font-normal">
+              &quot;{livestream?.title}&quot; by {userName}
+            </p>
+            
+            {livestream?.description && (
+              <p className="text-sm text-blue-600 mt-2 font-normal">
+                {livestream.description}
+              </p>
+            )}
+
+            <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium text-blue-800">
+                  {livestream?.viewerCount || 0} waiting to join
+                </span>
+              </div>
+            </div>
+
+            {isOwner && (
+              <div className="mt-4 space-y-3">
+                {countdown <= 0 && (
+                  <div className="p-3 bg-green-50 border border-green-300 rounded-lg">
+                    <p className="text-green-800 text-sm font-medium">
+                      ✅ Your stream is ready to start!
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={handleStartStream}
-                    className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors font-normal"
+                    className={`px-6 py-2 rounded-full transition-colors font-normal ${
+                      countdown <= 0 
+                        ? "bg-green-600 text-white hover:bg-green-700 text-lg px-8 py-3" 
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    }`}
                   >
-                    Start Stream Now
+                    {countdown <= 0 ? "🔴 Start Stream Now" : "Start Stream Now"}
                   </button>
-                  <p className="text-xs text-blue-600 mt-2 font-normal">
-                    💡 Click to start your livestream immediately
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition-colors font-normal flex items-center gap-1 justify-center"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleCancelStream}
+                    className="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors font-normal flex items-center gap-1 justify-center"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!isOwner && (
+              <div className="mt-4">
+                <p className="text-sm text-blue-600 font-normal">
+                  {countdown <= 0 
+                    ? (isLoggedIn 
+                        ? "Waiting for the host to start the stream..."
+                        : "Log in to join when the stream starts"
+                      )
+                    : (isLoggedIn 
+                        ? "You'll be able to join when the stream starts"
+                        : "Log in to join the livestream when it starts"
+                      )
+                  }
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Edit Modal */}
+          {isOwner && (
+            <ScheduleLivestream
+              isOpen={showEditModal}
+              onClose={() => setShowEditModal(false)}
+              projectSlug={projectSlug}
+              onScheduleSuccess={() => {
+                setShowEditModal(false);
+                fetchLivestreamData();
+              }}
+              editMode={true}
+              existingLivestream={livestream}
+            />
+          )}
+        </div>
+      );
+
+    case "no-stream":
+    default:
+      if (isOwner) {
+        return (
+          <div className="space-y-4">
+            <div className="bg-gray-50 border border-gray-300 p-6 rounded-lg text-center">
+              <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-black mb-2">
+                No Livestream Scheduled
+              </h3>
+              <p className="text-gray-600 mb-4 font-normal">
+                Schedule a livestream to engage with your supporters
+              </p>
+
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setShowScheduleModal(true)}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition-colors font-normal"
+                >
+                  Schedule Livestream
+                </button>
+              </div>
+            </div>
+
+            <ScheduleLivestream
+              isOpen={showScheduleModal}
+              onClose={() => setShowScheduleModal(false)}
+              projectSlug={projectSlug}
+              onScheduleSuccess={() => {
+                setShowScheduleModal(false);
+                fetchLivestreamData();
+              }}
+            />
+          </div>
+        );
+      } else {
+        return (
+          <div className="space-y-4">
+            <div className="bg-gray-50 border border-gray-300 p-6 rounded-lg text-center">
+              <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-black mb-2">
+                No Livestream Scheduled Yet
+              </h3>
+              <p className="text-gray-600 mb-4 font-normal">
+                The project creator hasn&apos;t scheduled a livestream yet.
+              </p>
+
+              {isLoggedIn ? (
+                <div className="text-sm text-gray-500">
+                  <p className="font-normal">
+                    You&apos;ll be able to join when a stream is scheduled.
+                  </p>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500">
+                  <p className="font-normal">
+                    Log in to join livestreams when they&apos;re scheduled.
                   </p>
                 </div>
               )}
             </div>
-          )}
-        </div>
-
-        {/* Schedule Modal for expired streams */}
-        {isOwner && hasExpired && (
-          <ScheduleLivestream
-            isOpen={showScheduleModal}
-            onClose={() => setShowScheduleModal(false)}
-            projectSlug={projectSlug}
-            onScheduleSuccess={() => {
-              setShowScheduleModal(false);
-              fetchLivestreamData(); // Refresh data
-            }}
-          />
-        )}
-      </div>
-    );
-  }
-
-  // No livestream scheduled
-  if (isOwner) {
-    // Owner view - can schedule livestream
-    return (
-      <div className="space-y-4">
-        <div className="bg-gray-50 border border-gray-300 p-6 rounded-lg text-center">
-          <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-black mb-2">
-            No Livestream Scheduled
-          </h3>
-          <p className="text-gray-600 mb-4 font-normal">
-            Schedule a livestream to engage with your supporters
-          </p>
-
-          <button
-            onClick={() => setShowScheduleModal(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition-colors font-normal"
-          >
-            Schedule Livestream
-          </button>
-        </div>
-
-        <ScheduleLivestream
-          isOpen={showScheduleModal}
-          onClose={() => setShowScheduleModal(false)}
-          projectSlug={projectSlug}
-          onScheduleSuccess={() => {
-            setShowScheduleModal(false);
-            fetchLivestreamData(); // Refresh data
-          }}
-        />
-      </div>
-    );
-  } else {
-    // Viewer view - shows information about no scheduled stream
-    return (
-      <div className="space-y-4">
-        <div className="bg-gray-50 border border-gray-300 p-6 rounded-lg text-center">
-          <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-black mb-2">
-            No Livestream Scheduled Yet
-          </h3>
-          <p className="text-gray-600 mb-4 font-normal">
-            The project creator hasn&apos;t scheduled a livestream yet.
-          </p>
-
-          {isLoggedIn ? (
-            <div className="text-sm text-gray-500">
-              <p className="font-normal">
-                You&apos;ll be able to join the stream when it&apos;s scheduled.
-              </p>
-            </div>
-          ) : (
-            <div className="text-sm text-gray-500">
-              <p className="font-normal">
-                Log in to join livestreams when they&apos;re scheduled.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
+          </div>
+        );
+      }
   }
 }

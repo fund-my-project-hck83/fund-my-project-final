@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Video, Calendar, Clock, X } from "lucide-react";
+import { ILivestream } from "@/interfaces/interfaces";
 
 interface ScheduleLivestreamProps {
   isOpen: boolean;
   onClose: () => void;
   projectSlug: string;
   onScheduleSuccess?: () => void;
+  editMode?: boolean;
+  existingLivestream?: ILivestream | null;
 }
 
 interface LivestreamForm {
@@ -21,6 +24,8 @@ export default function ScheduleLivestream({
   onClose,
   projectSlug,
   onScheduleSuccess,
+  editMode = false,
+  existingLivestream = null,
 }: ScheduleLivestreamProps) {
   const [form, setForm] = useState<LivestreamForm>({
     title: "",
@@ -29,6 +34,27 @@ export default function ScheduleLivestream({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editMode && existingLivestream) {
+      const scheduledDate = new Date(existingLivestream.scheduledAt);
+      const formattedDate = scheduledDate.toISOString().slice(0, 16); // Format for datetime-local input
+      
+      setForm({
+        title: existingLivestream.title,
+        description: existingLivestream.description || "",
+        scheduledAt: formattedDate,
+      });
+    } else if (!editMode) {
+      // Reset form for new streams
+      setForm({
+        title: "",
+        description: "",
+        scheduledAt: "",
+      });
+    }
+  }, [editMode, existingLivestream, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,8 +75,11 @@ export default function ScheduleLivestream({
     setError("");
 
     try {
-      const response = await fetch(`/api/livestreams/project/${projectSlug}`, {
-        method: "POST",
+      const url = `/api/livestreams/project/${projectSlug}`;
+      const method = editMode ? "PATCH" : "POST";
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -63,17 +92,19 @@ export default function ScheduleLivestream({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to schedule livestream");
+        throw new Error(errorData.message || errorData.error || `Failed to ${editMode ? 'update' : 'schedule'} livestream`);
       }
 
       await response.json();
 
-      // Reset form
-      setForm({
-        title: "",
-        description: "",
-        scheduledAt: "",
-      });
+      // Reset form only if creating new stream
+      if (!editMode) {
+        setForm({
+          title: "",
+          description: "",
+          scheduledAt: "",
+        });
+      }
 
       // Call success callback
       if (onScheduleSuccess) {
@@ -84,7 +115,7 @@ export default function ScheduleLivestream({
       onClose();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to schedule livestream"
+        err instanceof Error ? err.message : `Failed to ${editMode ? 'update' : 'schedule'} livestream`
       );
     } finally {
       setIsSubmitting(false);
@@ -93,11 +124,13 @@ export default function ScheduleLivestream({
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setForm({
-        title: "",
-        description: "",
-        scheduledAt: "",
-      });
+      if (!editMode) {
+        setForm({
+          title: "",
+          description: "",
+          scheduledAt: "",
+        });
+      }
       setError("");
       onClose();
     }
@@ -111,7 +144,7 @@ export default function ScheduleLivestream({
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-medium text-black flex items-center gap-2">
             <Video className="w-5 h-5 text-blue-600" />
-            Schedule Livestream
+            {editMode ? "Edit Livestream" : "Schedule Livestream"}
           </h2>
           <button
             onClick={handleClose}
@@ -134,7 +167,10 @@ export default function ScheduleLivestream({
               <Calendar className="w-6 h-6 text-blue-600" />
             </div>
             <p className="text-gray-600 text-sm font-normal">
-              Schedule a livestream to engage with your supporters
+              {editMode 
+                ? "Update your livestream details"
+                : "Schedule a livestream to engage with your supporters"
+              }
             </p>
           </div>
 
@@ -217,12 +253,12 @@ export default function ScheduleLivestream({
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Scheduling...
+                  {editMode ? "Updating..." : "Scheduling..."}
                 </>
               ) : (
                 <>
                   <Clock className="w-4 h-4" />
-                  Schedule Stream
+                  {editMode ? "Update Stream" : "Schedule Stream"}
                 </>
               )}
             </button>
