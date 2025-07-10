@@ -20,7 +20,7 @@ interface LivestreamSectionProps {
 
 // Helper functions
 function formatCountdown(milliseconds: number): string {
-  if (milliseconds <= 0) return "Starting now...";
+  if (milliseconds <= 0) return "Time has passed";
 
   const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
   const hours = Math.floor(
@@ -105,20 +105,25 @@ export default function LivestreamSection({
       }
     );
 
-    channel.bind("livestream-stopped", () => {
-      console.log("Livestream stopped via Pusher");
+    channel.bind("livestream-stopped", (data: { isLive: boolean; livestreamDeleted?: boolean }) => {
+      console.log("Livestream stopped via Pusher:", data);
       setIsStreaming(false);
 
-      // Update livestream data if we have it
-      if (livestream) {
-        setLivestream((prev) =>
-          prev
-            ? {
-                ...prev,
-                isLive: false,
-              }
-            : null
-        );
+      // If livestream was deleted, clear the livestream data
+      if (data.livestreamDeleted) {
+        setLivestream(null);
+      } else {
+        // Update livestream data if we have it
+        if (livestream) {
+          setLivestream((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  isLive: false,
+                }
+              : null
+          );
+        }
       }
     });
 
@@ -152,7 +157,12 @@ export default function LivestreamSection({
         const streamTime = new Date(livestream.scheduledAt).getTime();
         const timeLeft = streamTime - now;
 
-        setTimeUntilStream(timeLeft);
+        // Only update if time hasn't passed (prevent negative values)
+        if (timeLeft > 0) {
+          setTimeUntilStream(timeLeft);
+        } else {
+          setTimeUntilStream(0);
+        }
       }, 1000);
 
       return () => clearInterval(timer);
@@ -181,7 +191,13 @@ export default function LivestreamSection({
         setIsStreaming(true);
         setLivestream((prev) => (prev ? { ...prev, isLive: true } : prev));
       } else {
-        console.error("Failed to start stream");
+        const errorData = await response.json();
+        console.error("Failed to start stream:", errorData.error);
+        
+        // If scheduled time has passed, clear the livestream to force rescheduling
+        if (errorData.error?.includes("Scheduled time has passed")) {
+          setLivestream(null);
+        }
       }
     } catch (error) {
       console.error("Error starting stream:", error);
@@ -215,17 +231,32 @@ export default function LivestreamSection({
   }
 
   if (livestream && !isStreaming) {
+    // Check if scheduled time has passed
+    const now = new Date();
+    const scheduledTime = new Date(livestream.scheduledAt);
+    const hasExpired = scheduledTime < now;
+
     return (
       <div className="space-y-4">
         {/* Scheduled Livestream Display */}
-        <div className="bg-blue-50 border border-blue-300 p-6 rounded-lg text-center">
-          <h3 className="text-lg font-medium text-blue-900 mb-2">
-            Livestream Scheduled
+        <div className={`border p-6 rounded-lg text-center ${
+          hasExpired 
+            ? "bg-red-50 border-red-300" 
+            : "bg-blue-50 border-blue-300"
+        }`}>
+          <h3 className={`text-lg font-medium mb-2 ${
+            hasExpired ? "text-red-900" : "text-blue-900"
+          }`}>
+            {hasExpired ? "Livestream Expired" : "Livestream Scheduled"}
           </h3>
-          <div className="text-2xl font-medium text-blue-600 mb-2">
-            {formatCountdown(timeUntilStream)}
+          <div className={`text-2xl font-medium mb-2 ${
+            hasExpired ? "text-red-600" : "text-blue-600"
+          }`}>
+            {hasExpired ? "Time has passed" : formatCountdown(timeUntilStream)}
           </div>
-          <p className="text-blue-700 font-normal">
+          <p className={`font-normal ${
+            hasExpired ? "text-red-700" : "text-blue-700"
+          }`}>
             &quot;{livestream.title}&quot; by {userName}
           </p>
 
@@ -241,18 +272,47 @@ export default function LivestreamSection({
 
           {isOwner && (
             <div className="mt-4">
-              <button
-                onClick={handleStartStream}
-                className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors font-normal"
-              >
-                Start Stream Now
-              </button>
-              <p className="text-xs text-blue-600 mt-2 font-normal">
-                💡 Click to start your livestream immediately
-              </p>
+              {hasExpired ? (
+                <div>
+                  <p className="text-sm text-red-600 mb-3 font-normal">
+                    The scheduled time has passed. Please reschedule your livestream.
+                  </p>
+                  <button
+                    onClick={() => setShowScheduleModal(true)}
+                    className="bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700 transition-colors font-normal"
+                  >
+                    Reschedule Livestream
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <button
+                    onClick={handleStartStream}
+                    className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors font-normal"
+                  >
+                    Start Stream Now
+                  </button>
+                  <p className="text-xs text-blue-600 mt-2 font-normal">
+                    💡 Click to start your livestream immediately
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
+
+        {/* Schedule Modal for expired streams */}
+        {isOwner && hasExpired && (
+          <ScheduleLivestream
+            isOpen={showScheduleModal}
+            onClose={() => setShowScheduleModal(false)}
+            projectSlug={projectSlug}
+            onScheduleSuccess={() => {
+              setShowScheduleModal(false);
+              fetchLivestreamData(); // Refresh data
+            }}
+          />
+        )}
       </div>
     );
   }
