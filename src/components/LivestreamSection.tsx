@@ -5,6 +5,7 @@ import { Video } from "lucide-react";
 import { ILivestream } from "@/interfaces/interfaces";
 import ScheduleLivestream from "@/components/ScheduleLivestream";
 import { pusherClient } from "@/lib/pusher";
+import LoadingSpinner from "./LoadingSpinner";
 
 // Dynamic import to prevent Agora SDK from being bundled initially
 const AgoraLivestream = lazy(() => import("@/components/AgoraLivestream"));
@@ -86,11 +87,7 @@ export default function LivestreamSection({
 
     channel.bind(
       "livestream-started",
-      (data: {
-        isLive: boolean;
-        channelName: string;
-        title: string;
-      }) => {
+      (data: { isLive: boolean; channelName: string; title: string }) => {
         console.log("Livestream started via Pusher:", data);
         setIsStreaming(true);
 
@@ -126,26 +123,21 @@ export default function LivestreamSection({
     });
 
     // Real-time viewer count updates
-    channel.bind(
-      "viewer-count-updated",
-      (data: {
-        viewerCount: number;
-      }) => {
-        console.log("Viewer count updated via Pusher:", data);
+    channel.bind("viewer-count-updated", (data: { viewerCount: number }) => {
+      console.log("Viewer count updated via Pusher:", data);
 
-        // Update livestream data with real-time info
-        if (livestream) {
-          setLivestream((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  viewerCount: data.viewerCount,
-                }
-              : null
-          );
-        }
+      // Update livestream data with real-time info
+      if (livestream) {
+        setLivestream((prev) =>
+          prev
+            ? {
+                ...prev,
+                viewerCount: data.viewerCount,
+              }
+            : null
+        );
       }
-    );
+    });
 
     return () => {
       pusherClient.unsubscribe(`project-${projectSlug}-livestream`);
@@ -174,19 +166,20 @@ export default function LivestreamSection({
     if (!isOwner) return;
 
     try {
-      const response = await fetch(`/api/livestreams/project/${projectSlug}/start`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `/api/livestreams/project/${projectSlug}/start`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.ok) {
         // Optimistically update state to show AgoraLivestream immediately
         setIsStreaming(true);
-        setLivestream((prev) =>
-          prev ? { ...prev, isLive: true } : prev
-        );
+        setLivestream((prev) => (prev ? { ...prev, isLive: true } : prev));
       } else {
         console.error("Failed to start stream");
       }
@@ -197,22 +190,19 @@ export default function LivestreamSection({
 
   // Loading state
   if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="bg-gray-50 border border-gray-300 p-6 rounded-lg text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600 font-normal">
-            Loading livestream information...
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Loading project information..." />;
   }
 
   // Render logic based on state
   if (isStreaming) {
     return (
-      <Suspense fallback={<div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div></div>}>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          </div>
+        }
+      >
         <AgoraLivestream
           isHost={isOwner}
           userId={userId}

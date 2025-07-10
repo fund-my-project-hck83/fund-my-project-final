@@ -64,6 +64,7 @@ export default function AgoraLivestream({
   const localAudioTrackRef = useRef<AgoraTrackType | null>(null);
   const localVideoTrackRef = useRef<AgoraTrackType | null>(null);
   const remoteUsersRef = useRef<AgoraUserType[]>([]);
+  const screenVideoTrackRef = useRef<AgoraTrackType | null>(null);
 
   // Agora configuration
   const agoraConfig = {
@@ -367,31 +368,44 @@ export default function AgoraLivestream({
     }
   };
 
+  // Robust screen sharing logic
   const toggleScreenSharing = async () => {
     if (!isHost) return;
+    const AgoraRTC = await import("agora-rtc-sdk-ng");
 
     try {
       if (isScreenSharing) {
         // Stop screen sharing
-        if (screenStreamRef.current) {
-          screenStreamRef.current.getTracks().forEach((track) => track.stop());
-          screenStreamRef.current = null;
-        }
-        if (localVideoTrackRef.current) {
-          await localVideoTrackRef.current.setEnabled(true);
+        if (screenVideoTrackRef.current) {
+          await agoraClientRef.current?.unpublish(screenVideoTrackRef.current);
+          screenVideoTrackRef.current.close();
+          screenVideoTrackRef.current = null;
         }
         setIsScreenSharing(false);
+        // Re-publish camera track if enabled
+        if (localVideoTrackRef.current && isVideoEnabled) {
+          await agoraClientRef.current?.publish(localVideoTrackRef.current);
+          if (videoRef.current) {
+            localVideoTrackRef.current.play(videoRef.current);
+          }
+        }
       } else {
         // Start screen sharing
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: true,
-        });
-        screenStreamRef.current = stream;
+        const screenTrackResult = await AgoraRTC.default.createScreenVideoTrack({ encoderConfig: '1080p_1' }, 'auto');
+        // Handle both possible return types
+        const screenTrack = Array.isArray(screenTrackResult) ? screenTrackResult[0] : screenTrackResult;
+        screenVideoTrackRef.current = screenTrack;
+        // Unpublish camera track
         if (localVideoTrackRef.current) {
-          await localVideoTrackRef.current.setEnabled(false);
+          await agoraClientRef.current?.unpublish(localVideoTrackRef.current);
         }
+        // Publish screen track
+        await agoraClientRef.current?.publish(screenTrack);
         setIsScreenSharing(true);
+        // Play screen locally
+        if (videoRef.current) {
+          screenTrack.play(videoRef.current);
+        }
       }
     } catch (error) {
       console.error("❌ Failed to toggle screen sharing:", error);
@@ -631,6 +645,7 @@ export default function AgoraLivestream({
                   ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-400"
                   : "bg-gray-300 text-gray-700 hover:bg-gray-400 focus:ring-gray-400"
               }`}
+              disabled={isScreenSharing}
             >
               {isVideoEnabled ? "Stop Video" : "Start Video"}
             </button>
@@ -647,6 +662,7 @@ export default function AgoraLivestream({
             <button
               onClick={refreshCamera}
               className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-medium shadow hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-150"
+              disabled={isScreenSharing}
             >
               <RefreshCw className="w-4 h-4" />
             </button>
