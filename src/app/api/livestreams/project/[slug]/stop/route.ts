@@ -48,16 +48,10 @@ export async function POST(
       );
     }
 
-    // Stop the livestream
-    await db.collection<ILivestream>("livestreams").updateOne(
-      { _id: livestream._id },
-      {
-        $set: {
-          isLive: false,
-          updatedAt: new Date(),
-        },
-      }
-    );
+    // Delete the livestream record to force rescheduling
+    await db.collection<ILivestream>("livestreams").deleteOne({
+      _id: livestream._id,
+    });
 
     // Update project status
     await db.collection<IProject>("projects").updateOne(
@@ -75,7 +69,10 @@ export async function POST(
       await pusherServer.trigger(
         `project-${slug}-livestream`,
         'livestream-stopped',
-        { isLive: false }
+        { 
+          isLive: false,
+          livestreamDeleted: true // Indicate that the livestream was deleted
+        }
       );
     } catch (pusherError) {
       console.error('Pusher error:', pusherError);
@@ -83,7 +80,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: "Livestream stopped successfully",
+      message: "Livestream stopped and deleted successfully",
     });
   } catch (error) {
     console.error("Error stopping livestream:", error);

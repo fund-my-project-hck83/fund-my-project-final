@@ -52,10 +52,10 @@ export interface IProject {
   };
   aiProposal?: string;
   proposalDocumentUrl?: string;
-  impactMetrics: {
+  impactMetrics: Array<{
     number: number;
     description: string;
-  };
+  }>;
   isFundingComplete: boolean;
   completedAt?: Date;
   isLive: boolean;

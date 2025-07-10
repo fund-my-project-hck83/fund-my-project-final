@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Project } from "@/types";
+import { IProject } from "@/interfaces/interfaces";
 import { ArrowLeft, Printer, Share2 } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -12,7 +12,7 @@ export default function ProposalPage({
   params: Promise<{ slug: string }>;
 }) {
   const router = useRouter();
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<IProject | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [slug, setSlug] = useState<string>("");
