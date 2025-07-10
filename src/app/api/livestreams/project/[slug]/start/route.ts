@@ -40,16 +40,6 @@ export async function POST(
       );
     }
 
-    // Check if scheduled time has passed (prevent starting expired streams)
-    const now = new Date();
-    const scheduledTime = new Date(livestream.scheduledAt);
-    if (scheduledTime < now) {
-      return NextResponse.json(
-        { error: "Scheduled time has passed. Please reschedule your livestream." },
-        { status: 400 }
-      );
-    }
-
     // Check if project is already live (safety check)
     if (project.isLive) {
       return NextResponse.json(
@@ -64,6 +54,7 @@ export async function POST(
       {
         $set: {
           isLive: true,
+          endedAt: undefined,
           updatedAt: new Date(),
         },
       }

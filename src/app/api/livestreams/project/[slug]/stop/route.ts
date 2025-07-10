@@ -48,7 +48,7 @@ export async function POST(
       );
     }
 
-    // Delete the livestream record to force rescheduling
+    // Delete the livestream record when stream ends
     await db.collection<ILivestream>("livestreams").deleteOne({
       _id: livestream._id,
     });
@@ -69,9 +69,9 @@ export async function POST(
       await pusherServer.trigger(
         `project-${slug}-livestream`,
         'livestream-stopped',
-        { 
+        {
           isLive: false,
-          livestreamDeleted: true // Indicate that the livestream was deleted
+          livestreamDeleted: true
         }
       );
     } catch (pusherError) {

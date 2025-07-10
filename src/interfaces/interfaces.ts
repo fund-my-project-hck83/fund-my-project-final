@@ -152,6 +152,7 @@ export interface ILivestream {
   isLive: boolean;
   viewerCount: number;
   channelName: string;
+  endedAt?: Date; // Added field to track when the stream ended
   createdAt: Date;
   updatedAt: Date;
 }
