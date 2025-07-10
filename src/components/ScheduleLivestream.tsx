@@ -12,7 +12,6 @@ interface ScheduleLivestreamProps {
 
 interface LivestreamForm {
   title: string;
-  channelName: string;
   description: string;
   scheduledAt: string;
 }
@@ -25,7 +24,6 @@ export default function ScheduleLivestream({
 }: ScheduleLivestreamProps) {
   const [form, setForm] = useState<LivestreamForm>({
     title: "",
-    channelName: "",
     description: "",
     scheduledAt: "",
   });
@@ -58,7 +56,6 @@ export default function ScheduleLivestream({
         },
         body: JSON.stringify({
           title: form.title,
-          channelName: form.channelName,
           description: form.description,
           scheduledAt: scheduledDate,
         }),
@@ -74,7 +71,6 @@ export default function ScheduleLivestream({
       // Reset form
       setForm({
         title: "",
-        channelName: "",
         description: "",
         scheduledAt: "",
       });
@@ -99,7 +95,6 @@ export default function ScheduleLivestream({
     if (!isSubmitting) {
       setForm({
         title: "",
-        channelName: "",
         description: "",
         scheduledAt: "",
       });
@@ -159,25 +154,6 @@ export default function ScheduleLivestream({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-black bg-gray-50 font-normal"
               placeholder="Enter stream title"
               required
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black mb-2">
-              Channel Name
-            </label>
-            <input
-              type="text"
-              value={form.channelName}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  channelName: e.target.value,
-                }))
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-black bg-gray-50 font-normal"
-              placeholder="Enter your channel name"
               disabled={isSubmitting}
             />
           </div>

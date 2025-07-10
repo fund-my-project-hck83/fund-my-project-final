@@ -143,7 +143,6 @@ export interface IChatResponse {
   userAvatar?: string;
 }
 
-// Livestream interfaces
 export interface ILivestream {
   _id: ObjectId;
   projectId: ObjectId;
@@ -153,8 +152,6 @@ export interface ILivestream {
   isLive: boolean;
   viewerCount: number;
   channelName: string;
-  actualStartTime?: Date; // When stream actually started
-  startedEarly?: boolean; // Whether it started before scheduled time
   createdAt: Date;
   updatedAt: Date;
 }
@@ -162,7 +159,7 @@ export interface ILivestream {
 export interface ILivestreamViewer {
   _id: ObjectId;
   livestreamId: ObjectId;
-  userId?: string; // Optional for anonymous viewers
+  userId?: string;
   userName: string;
   userAvatar?: string;
   joinedAt: Date;

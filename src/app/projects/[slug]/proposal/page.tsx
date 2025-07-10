@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Project } from "@/types";
 import { ArrowLeft, Printer, Share2 } from "lucide-react";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default function ProposalPage({
   params,
@@ -49,14 +50,7 @@ export default function ProposalPage({
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
-          <p className="mt-4 text-gray-600 font-normal">Loading proposal...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Loading proposal..." />;
   }
 
   if (error || !project) {

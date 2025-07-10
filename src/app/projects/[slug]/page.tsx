@@ -58,13 +58,7 @@ interface SwotCard {
 }
 
 // Loading fallback components
-const ModalLoadingFallback = () => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded-lg">
-      <LoadingSpinner message="Loading..." />
-    </div>
-  </div>
-);
+const ModalLoadingFallback = () => <LoadingSpinner message="Loading..." />;
 
 const ComponentLoadingFallback = ({ message }: { message: string }) => (
   <div className="bg-gray-50 border border-gray-300 p-6 rounded-lg text-center">
