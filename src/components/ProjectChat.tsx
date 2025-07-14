@@ -5,6 +5,7 @@ import { Send, MessageCircle, Crown, Trash2, Lock } from "lucide-react";
 import Image from "next/image";
 import { IChatResponse } from "@/interfaces/interfaces";
 import { pusherClient } from "@/lib/pusher";
+import LoadingSpinner from "./LoadingSpinner";
 
 interface ProjectChatProps {
   projectSlug: string;
@@ -172,16 +173,8 @@ export default function ProjectChat({
 
   // Show loading state
   if (isLoading) {
-    return (
-      <div className="bg-white border border-black rounded-lg p-6">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
-          <span className="ml-3 text-gray-600 font-normal">Loading chat...</span>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner inline size="md" message="Loading chat..." />;
   }
-
   // Show view-only message
   if (!currentUser) {
     return (
@@ -367,7 +360,7 @@ export default function ProjectChat({
               className="w-full px-4 py-3 pr-14 border border-black rounded-full resize-none focus:outline-none focus:border-gray-800 transition-colors font-normal min-h-[44px] flex items-center"
               rows={1}
               disabled={isSending}
-              style={{ paddingTop: '11px', paddingBottom: '11px' }}
+              style={{ paddingTop: "11px", paddingBottom: "11px" }}
             />
             <button
               onClick={sendMessage}
