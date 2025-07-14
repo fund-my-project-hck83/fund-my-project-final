@@ -7,6 +7,7 @@ import { Project } from "@/server/models/ProjectModel";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Image from "next/image";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 type ProjectStatus = {
   status: "completed" | "soon" | "active" | "ended";
@@ -233,10 +234,7 @@ export default function AllProjectsPage() {
           <div className="max-w-7xl mx-auto">
             {loading || userLoading ? (
               <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-                <span className="ml-3 text-gray-600 font-normal">
-                  Loading projects...
-                </span>
+                <LoadingSpinner inline size="md" message="Loading projects..." />
               </div>
             ) : (
               <>
